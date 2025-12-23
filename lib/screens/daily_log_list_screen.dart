@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/database_provider.dart';
 import 'daily_log_form_screen.dart';
+import 'graft_status_screen.dart';
 
 class DailyLogListScreen extends ConsumerWidget {
   final int projectId;
@@ -152,9 +153,37 @@ class DailyLogListScreen extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                            Text(
-                              DateFormat('yyyy/MM/dd').format(log.date),
-                              style: Theme.of(context).textTheme.bodyMedium,
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  DateFormat('yyyy/MM/dd').format(log.date),
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.eco,
+                                    color: Theme.of(context).colorScheme.primary,
+                                    size: 20,
+                                  ),
+                                  onPressed: () async {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => GraftStatusScreen(
+                                          dailyLogId: log.id,
+                                          dayNumber: log.dayNumber,
+                                        ),
+                                      ),
+                                    );
+                                    ref.invalidate(projectDailyLogsProvider(projectId));
+                                  },
+                                  tooltip: '狀態記錄',
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                ),
+                              ],
                             ),
                           ],
                         ),
