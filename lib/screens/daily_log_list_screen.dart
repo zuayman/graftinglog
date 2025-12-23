@@ -68,7 +68,30 @@ class DailyLogListScreen extends ConsumerWidget {
                    const Color(0xFFFFFDE7))               // Yellow 50
                 : Colors.white;
 
-            return Card(
+            return Dismissible(
+              key: Key('log_${log.id}'),
+              direction: DismissDirection.endToStart,
+              confirmDismiss: (direction) async {
+                return await _showDeleteConfirmDialog(context, log);
+              },
+              onDismissed: (direction) async {
+                await _deleteLog(ref, log.id);
+              },
+              background: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 20),
+                child: const Icon(
+                  Icons.delete,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+              child: Card(
               elevation: elevation,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -209,7 +232,8 @@ class DailyLogListScreen extends ConsumerWidget {
                 ),
               ),
             ),
-          );
+              ),
+            );
           },
         );
       },
@@ -228,5 +252,44 @@ class DailyLogListScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<bool?> _showDeleteConfirmDialog(BuildContext context, dynamic log) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('確認刪除'),
+          content: Text('確定要刪除第 ${log.dayNumber} 日的日誌嗎？\n此操作無法復原。'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('刪除'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteLog(WidgetRef ref, int logId) async {
+    try {
+      final db = ref.read(databaseProvider);
+      await db.deleteDailyLog(logId);
+      ref.invalidate(projectDailyLogsProvider(projectId));
+    } catch (e) {
+      // Error handling - could show a snackbar here if needed
+      debugPrint('Error deleting log: $e');
+    }
   }
 }
