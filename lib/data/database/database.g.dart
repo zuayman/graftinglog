@@ -2805,6 +2805,627 @@ class GraftStatusCompanion extends UpdateCompanion<GraftStatusData> {
   }
 }
 
+class $ReminderSettingsTable extends ReminderSettings
+    with TableInfo<$ReminderSettingsTable, ReminderSetting> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReminderSettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _projectIdMeta = const VerificationMeta(
+    'projectId',
+  );
+  @override
+  late final GeneratedColumn<int> projectId = GeneratedColumn<int>(
+    'project_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES projects (id)',
+    ),
+  );
+  static const VerificationMeta _dailyReminderEnabledMeta =
+      const VerificationMeta('dailyReminderEnabled');
+  @override
+  late final GeneratedColumn<bool> dailyReminderEnabled = GeneratedColumn<bool>(
+    'daily_reminder_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("daily_reminder_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _dailyReminderHourMeta = const VerificationMeta(
+    'dailyReminderHour',
+  );
+  @override
+  late final GeneratedColumn<int> dailyReminderHour = GeneratedColumn<int>(
+    'daily_reminder_hour',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(9),
+  );
+  static const VerificationMeta _dailyReminderMinuteMeta =
+      const VerificationMeta('dailyReminderMinute');
+  @override
+  late final GeneratedColumn<int> dailyReminderMinute = GeneratedColumn<int>(
+    'daily_reminder_minute',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _startDateReminderEnabledMeta =
+      const VerificationMeta('startDateReminderEnabled');
+  @override
+  late final GeneratedColumn<bool> startDateReminderEnabled =
+      GeneratedColumn<bool>(
+        'start_date_reminder_enabled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("start_date_reminder_enabled" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _endDateReminderEnabledMeta =
+      const VerificationMeta('endDateReminderEnabled');
+  @override
+  late final GeneratedColumn<bool> endDateReminderEnabled =
+      GeneratedColumn<bool>(
+        'end_date_reminder_enabled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("end_date_reminder_enabled" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _expectedStartDateMeta = const VerificationMeta(
+    'expectedStartDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> expectedStartDate =
+      GeneratedColumn<DateTime>(
+        'expected_start_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _expectedEndDateMeta = const VerificationMeta(
+    'expectedEndDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> expectedEndDate =
+      GeneratedColumn<DateTime>(
+        'expected_end_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    projectId,
+    dailyReminderEnabled,
+    dailyReminderHour,
+    dailyReminderMinute,
+    startDateReminderEnabled,
+    endDateReminderEnabled,
+    expectedStartDate,
+    expectedEndDate,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'reminder_settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReminderSetting> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(
+        _projectIdMeta,
+        projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('daily_reminder_enabled')) {
+      context.handle(
+        _dailyReminderEnabledMeta,
+        dailyReminderEnabled.isAcceptableOrUnknown(
+          data['daily_reminder_enabled']!,
+          _dailyReminderEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('daily_reminder_hour')) {
+      context.handle(
+        _dailyReminderHourMeta,
+        dailyReminderHour.isAcceptableOrUnknown(
+          data['daily_reminder_hour']!,
+          _dailyReminderHourMeta,
+        ),
+      );
+    }
+    if (data.containsKey('daily_reminder_minute')) {
+      context.handle(
+        _dailyReminderMinuteMeta,
+        dailyReminderMinute.isAcceptableOrUnknown(
+          data['daily_reminder_minute']!,
+          _dailyReminderMinuteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('start_date_reminder_enabled')) {
+      context.handle(
+        _startDateReminderEnabledMeta,
+        startDateReminderEnabled.isAcceptableOrUnknown(
+          data['start_date_reminder_enabled']!,
+          _startDateReminderEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('end_date_reminder_enabled')) {
+      context.handle(
+        _endDateReminderEnabledMeta,
+        endDateReminderEnabled.isAcceptableOrUnknown(
+          data['end_date_reminder_enabled']!,
+          _endDateReminderEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('expected_start_date')) {
+      context.handle(
+        _expectedStartDateMeta,
+        expectedStartDate.isAcceptableOrUnknown(
+          data['expected_start_date']!,
+          _expectedStartDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('expected_end_date')) {
+      context.handle(
+        _expectedEndDateMeta,
+        expectedEndDate.isAcceptableOrUnknown(
+          data['expected_end_date']!,
+          _expectedEndDateMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ReminderSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReminderSetting(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      projectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}project_id'],
+      )!,
+      dailyReminderEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}daily_reminder_enabled'],
+      )!,
+      dailyReminderHour: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}daily_reminder_hour'],
+      )!,
+      dailyReminderMinute: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}daily_reminder_minute'],
+      )!,
+      startDateReminderEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}start_date_reminder_enabled'],
+      )!,
+      endDateReminderEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}end_date_reminder_enabled'],
+      )!,
+      expectedStartDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}expected_start_date'],
+      ),
+      expectedEndDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}expected_end_date'],
+      ),
+    );
+  }
+
+  @override
+  $ReminderSettingsTable createAlias(String alias) {
+    return $ReminderSettingsTable(attachedDatabase, alias);
+  }
+}
+
+class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
+  final int id;
+  final int projectId;
+  final bool dailyReminderEnabled;
+  final int dailyReminderHour;
+  final int dailyReminderMinute;
+  final bool startDateReminderEnabled;
+  final bool endDateReminderEnabled;
+  final DateTime? expectedStartDate;
+  final DateTime? expectedEndDate;
+  const ReminderSetting({
+    required this.id,
+    required this.projectId,
+    required this.dailyReminderEnabled,
+    required this.dailyReminderHour,
+    required this.dailyReminderMinute,
+    required this.startDateReminderEnabled,
+    required this.endDateReminderEnabled,
+    this.expectedStartDate,
+    this.expectedEndDate,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['project_id'] = Variable<int>(projectId);
+    map['daily_reminder_enabled'] = Variable<bool>(dailyReminderEnabled);
+    map['daily_reminder_hour'] = Variable<int>(dailyReminderHour);
+    map['daily_reminder_minute'] = Variable<int>(dailyReminderMinute);
+    map['start_date_reminder_enabled'] = Variable<bool>(
+      startDateReminderEnabled,
+    );
+    map['end_date_reminder_enabled'] = Variable<bool>(endDateReminderEnabled);
+    if (!nullToAbsent || expectedStartDate != null) {
+      map['expected_start_date'] = Variable<DateTime>(expectedStartDate);
+    }
+    if (!nullToAbsent || expectedEndDate != null) {
+      map['expected_end_date'] = Variable<DateTime>(expectedEndDate);
+    }
+    return map;
+  }
+
+  ReminderSettingsCompanion toCompanion(bool nullToAbsent) {
+    return ReminderSettingsCompanion(
+      id: Value(id),
+      projectId: Value(projectId),
+      dailyReminderEnabled: Value(dailyReminderEnabled),
+      dailyReminderHour: Value(dailyReminderHour),
+      dailyReminderMinute: Value(dailyReminderMinute),
+      startDateReminderEnabled: Value(startDateReminderEnabled),
+      endDateReminderEnabled: Value(endDateReminderEnabled),
+      expectedStartDate: expectedStartDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expectedStartDate),
+      expectedEndDate: expectedEndDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expectedEndDate),
+    );
+  }
+
+  factory ReminderSetting.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReminderSetting(
+      id: serializer.fromJson<int>(json['id']),
+      projectId: serializer.fromJson<int>(json['projectId']),
+      dailyReminderEnabled: serializer.fromJson<bool>(
+        json['dailyReminderEnabled'],
+      ),
+      dailyReminderHour: serializer.fromJson<int>(json['dailyReminderHour']),
+      dailyReminderMinute: serializer.fromJson<int>(
+        json['dailyReminderMinute'],
+      ),
+      startDateReminderEnabled: serializer.fromJson<bool>(
+        json['startDateReminderEnabled'],
+      ),
+      endDateReminderEnabled: serializer.fromJson<bool>(
+        json['endDateReminderEnabled'],
+      ),
+      expectedStartDate: serializer.fromJson<DateTime?>(
+        json['expectedStartDate'],
+      ),
+      expectedEndDate: serializer.fromJson<DateTime?>(json['expectedEndDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'projectId': serializer.toJson<int>(projectId),
+      'dailyReminderEnabled': serializer.toJson<bool>(dailyReminderEnabled),
+      'dailyReminderHour': serializer.toJson<int>(dailyReminderHour),
+      'dailyReminderMinute': serializer.toJson<int>(dailyReminderMinute),
+      'startDateReminderEnabled': serializer.toJson<bool>(
+        startDateReminderEnabled,
+      ),
+      'endDateReminderEnabled': serializer.toJson<bool>(endDateReminderEnabled),
+      'expectedStartDate': serializer.toJson<DateTime?>(expectedStartDate),
+      'expectedEndDate': serializer.toJson<DateTime?>(expectedEndDate),
+    };
+  }
+
+  ReminderSetting copyWith({
+    int? id,
+    int? projectId,
+    bool? dailyReminderEnabled,
+    int? dailyReminderHour,
+    int? dailyReminderMinute,
+    bool? startDateReminderEnabled,
+    bool? endDateReminderEnabled,
+    Value<DateTime?> expectedStartDate = const Value.absent(),
+    Value<DateTime?> expectedEndDate = const Value.absent(),
+  }) => ReminderSetting(
+    id: id ?? this.id,
+    projectId: projectId ?? this.projectId,
+    dailyReminderEnabled: dailyReminderEnabled ?? this.dailyReminderEnabled,
+    dailyReminderHour: dailyReminderHour ?? this.dailyReminderHour,
+    dailyReminderMinute: dailyReminderMinute ?? this.dailyReminderMinute,
+    startDateReminderEnabled:
+        startDateReminderEnabled ?? this.startDateReminderEnabled,
+    endDateReminderEnabled:
+        endDateReminderEnabled ?? this.endDateReminderEnabled,
+    expectedStartDate: expectedStartDate.present
+        ? expectedStartDate.value
+        : this.expectedStartDate,
+    expectedEndDate: expectedEndDate.present
+        ? expectedEndDate.value
+        : this.expectedEndDate,
+  );
+  ReminderSetting copyWithCompanion(ReminderSettingsCompanion data) {
+    return ReminderSetting(
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      dailyReminderEnabled: data.dailyReminderEnabled.present
+          ? data.dailyReminderEnabled.value
+          : this.dailyReminderEnabled,
+      dailyReminderHour: data.dailyReminderHour.present
+          ? data.dailyReminderHour.value
+          : this.dailyReminderHour,
+      dailyReminderMinute: data.dailyReminderMinute.present
+          ? data.dailyReminderMinute.value
+          : this.dailyReminderMinute,
+      startDateReminderEnabled: data.startDateReminderEnabled.present
+          ? data.startDateReminderEnabled.value
+          : this.startDateReminderEnabled,
+      endDateReminderEnabled: data.endDateReminderEnabled.present
+          ? data.endDateReminderEnabled.value
+          : this.endDateReminderEnabled,
+      expectedStartDate: data.expectedStartDate.present
+          ? data.expectedStartDate.value
+          : this.expectedStartDate,
+      expectedEndDate: data.expectedEndDate.present
+          ? data.expectedEndDate.value
+          : this.expectedEndDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReminderSetting(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('dailyReminderEnabled: $dailyReminderEnabled, ')
+          ..write('dailyReminderHour: $dailyReminderHour, ')
+          ..write('dailyReminderMinute: $dailyReminderMinute, ')
+          ..write('startDateReminderEnabled: $startDateReminderEnabled, ')
+          ..write('endDateReminderEnabled: $endDateReminderEnabled, ')
+          ..write('expectedStartDate: $expectedStartDate, ')
+          ..write('expectedEndDate: $expectedEndDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    projectId,
+    dailyReminderEnabled,
+    dailyReminderHour,
+    dailyReminderMinute,
+    startDateReminderEnabled,
+    endDateReminderEnabled,
+    expectedStartDate,
+    expectedEndDate,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReminderSetting &&
+          other.id == this.id &&
+          other.projectId == this.projectId &&
+          other.dailyReminderEnabled == this.dailyReminderEnabled &&
+          other.dailyReminderHour == this.dailyReminderHour &&
+          other.dailyReminderMinute == this.dailyReminderMinute &&
+          other.startDateReminderEnabled == this.startDateReminderEnabled &&
+          other.endDateReminderEnabled == this.endDateReminderEnabled &&
+          other.expectedStartDate == this.expectedStartDate &&
+          other.expectedEndDate == this.expectedEndDate);
+}
+
+class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
+  final Value<int> id;
+  final Value<int> projectId;
+  final Value<bool> dailyReminderEnabled;
+  final Value<int> dailyReminderHour;
+  final Value<int> dailyReminderMinute;
+  final Value<bool> startDateReminderEnabled;
+  final Value<bool> endDateReminderEnabled;
+  final Value<DateTime?> expectedStartDate;
+  final Value<DateTime?> expectedEndDate;
+  const ReminderSettingsCompanion({
+    this.id = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.dailyReminderEnabled = const Value.absent(),
+    this.dailyReminderHour = const Value.absent(),
+    this.dailyReminderMinute = const Value.absent(),
+    this.startDateReminderEnabled = const Value.absent(),
+    this.endDateReminderEnabled = const Value.absent(),
+    this.expectedStartDate = const Value.absent(),
+    this.expectedEndDate = const Value.absent(),
+  });
+  ReminderSettingsCompanion.insert({
+    this.id = const Value.absent(),
+    required int projectId,
+    this.dailyReminderEnabled = const Value.absent(),
+    this.dailyReminderHour = const Value.absent(),
+    this.dailyReminderMinute = const Value.absent(),
+    this.startDateReminderEnabled = const Value.absent(),
+    this.endDateReminderEnabled = const Value.absent(),
+    this.expectedStartDate = const Value.absent(),
+    this.expectedEndDate = const Value.absent(),
+  }) : projectId = Value(projectId);
+  static Insertable<ReminderSetting> custom({
+    Expression<int>? id,
+    Expression<int>? projectId,
+    Expression<bool>? dailyReminderEnabled,
+    Expression<int>? dailyReminderHour,
+    Expression<int>? dailyReminderMinute,
+    Expression<bool>? startDateReminderEnabled,
+    Expression<bool>? endDateReminderEnabled,
+    Expression<DateTime>? expectedStartDate,
+    Expression<DateTime>? expectedEndDate,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (projectId != null) 'project_id': projectId,
+      if (dailyReminderEnabled != null)
+        'daily_reminder_enabled': dailyReminderEnabled,
+      if (dailyReminderHour != null) 'daily_reminder_hour': dailyReminderHour,
+      if (dailyReminderMinute != null)
+        'daily_reminder_minute': dailyReminderMinute,
+      if (startDateReminderEnabled != null)
+        'start_date_reminder_enabled': startDateReminderEnabled,
+      if (endDateReminderEnabled != null)
+        'end_date_reminder_enabled': endDateReminderEnabled,
+      if (expectedStartDate != null) 'expected_start_date': expectedStartDate,
+      if (expectedEndDate != null) 'expected_end_date': expectedEndDate,
+    });
+  }
+
+  ReminderSettingsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? projectId,
+    Value<bool>? dailyReminderEnabled,
+    Value<int>? dailyReminderHour,
+    Value<int>? dailyReminderMinute,
+    Value<bool>? startDateReminderEnabled,
+    Value<bool>? endDateReminderEnabled,
+    Value<DateTime?>? expectedStartDate,
+    Value<DateTime?>? expectedEndDate,
+  }) {
+    return ReminderSettingsCompanion(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      dailyReminderEnabled: dailyReminderEnabled ?? this.dailyReminderEnabled,
+      dailyReminderHour: dailyReminderHour ?? this.dailyReminderHour,
+      dailyReminderMinute: dailyReminderMinute ?? this.dailyReminderMinute,
+      startDateReminderEnabled:
+          startDateReminderEnabled ?? this.startDateReminderEnabled,
+      endDateReminderEnabled:
+          endDateReminderEnabled ?? this.endDateReminderEnabled,
+      expectedStartDate: expectedStartDate ?? this.expectedStartDate,
+      expectedEndDate: expectedEndDate ?? this.expectedEndDate,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<int>(projectId.value);
+    }
+    if (dailyReminderEnabled.present) {
+      map['daily_reminder_enabled'] = Variable<bool>(
+        dailyReminderEnabled.value,
+      );
+    }
+    if (dailyReminderHour.present) {
+      map['daily_reminder_hour'] = Variable<int>(dailyReminderHour.value);
+    }
+    if (dailyReminderMinute.present) {
+      map['daily_reminder_minute'] = Variable<int>(dailyReminderMinute.value);
+    }
+    if (startDateReminderEnabled.present) {
+      map['start_date_reminder_enabled'] = Variable<bool>(
+        startDateReminderEnabled.value,
+      );
+    }
+    if (endDateReminderEnabled.present) {
+      map['end_date_reminder_enabled'] = Variable<bool>(
+        endDateReminderEnabled.value,
+      );
+    }
+    if (expectedStartDate.present) {
+      map['expected_start_date'] = Variable<DateTime>(expectedStartDate.value);
+    }
+    if (expectedEndDate.present) {
+      map['expected_end_date'] = Variable<DateTime>(expectedEndDate.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReminderSettingsCompanion(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('dailyReminderEnabled: $dailyReminderEnabled, ')
+          ..write('dailyReminderHour: $dailyReminderHour, ')
+          ..write('dailyReminderMinute: $dailyReminderMinute, ')
+          ..write('startDateReminderEnabled: $startDateReminderEnabled, ')
+          ..write('endDateReminderEnabled: $endDateReminderEnabled, ')
+          ..write('expectedStartDate: $expectedStartDate, ')
+          ..write('expectedEndDate: $expectedEndDate')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2813,6 +3434,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ActionsTable actions = $ActionsTable(this);
   late final $ScionBatchesTable scionBatches = $ScionBatchesTable(this);
   late final $GraftStatusTable graftStatus = $GraftStatusTable(this);
+  late final $ReminderSettingsTable reminderSettings = $ReminderSettingsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2823,6 +3447,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     actions,
     scionBatches,
     graftStatus,
+    reminderSettings,
   ];
 }
 
@@ -2878,6 +3503,29 @@ final class $$ProjectsTableReferences
     ).filter((f) => f.projectId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_scionBatchesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ReminderSettingsTable, List<ReminderSetting>>
+  _reminderSettingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.reminderSettings,
+    aliasName: $_aliasNameGenerator(
+      db.projects.id,
+      db.reminderSettings.projectId,
+    ),
+  );
+
+  $$ReminderSettingsTableProcessedTableManager get reminderSettingsRefs {
+    final manager = $$ReminderSettingsTableTableManager(
+      $_db,
+      $_db.reminderSettings,
+    ).filter((f) => f.projectId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _reminderSettingsRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2959,6 +3607,31 @@ class $$ProjectsTableFilterComposer
           }) => $$ScionBatchesTableFilterComposer(
             $db: $db,
             $table: $db.scionBatches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> reminderSettingsRefs(
+    Expression<bool> Function($$ReminderSettingsTableFilterComposer f) f,
+  ) {
+    final $$ReminderSettingsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.reminderSettings,
+      getReferencedColumn: (t) => t.projectId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReminderSettingsTableFilterComposer(
+            $db: $db,
+            $table: $db.reminderSettings,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3077,6 +3750,31 @@ class $$ProjectsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> reminderSettingsRefs<T extends Object>(
+    Expression<T> Function($$ReminderSettingsTableAnnotationComposer a) f,
+  ) {
+    final $$ReminderSettingsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.reminderSettings,
+      getReferencedColumn: (t) => t.projectId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReminderSettingsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.reminderSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ProjectsTableTableManager
@@ -3092,7 +3790,11 @@ class $$ProjectsTableTableManager
           $$ProjectsTableUpdateCompanionBuilder,
           (Project, $$ProjectsTableReferences),
           Project,
-          PrefetchHooks Function({bool dailyLogsRefs, bool scionBatchesRefs})
+          PrefetchHooks Function({
+            bool dailyLogsRefs,
+            bool scionBatchesRefs,
+            bool reminderSettingsRefs,
+          })
         > {
   $$ProjectsTableTableManager(_$AppDatabase db, $ProjectsTable table)
     : super(
@@ -3142,12 +3844,17 @@ class $$ProjectsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({dailyLogsRefs = false, scionBatchesRefs = false}) {
+              ({
+                dailyLogsRefs = false,
+                scionBatchesRefs = false,
+                reminderSettingsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (dailyLogsRefs) db.dailyLogs,
                     if (scionBatchesRefs) db.scionBatches,
+                    if (reminderSettingsRefs) db.reminderSettings,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -3194,6 +3901,27 @@ class $$ProjectsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (reminderSettingsRefs)
+                        await $_getPrefetchedData<
+                          Project,
+                          $ProjectsTable,
+                          ReminderSetting
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProjectsTableReferences
+                              ._reminderSettingsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProjectsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).reminderSettingsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.projectId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -3214,7 +3942,11 @@ typedef $$ProjectsTableProcessedTableManager =
       $$ProjectsTableUpdateCompanionBuilder,
       (Project, $$ProjectsTableReferences),
       Project,
-      PrefetchHooks Function({bool dailyLogsRefs, bool scionBatchesRefs})
+      PrefetchHooks Function({
+        bool dailyLogsRefs,
+        bool scionBatchesRefs,
+        bool reminderSettingsRefs,
+      })
     >;
 typedef $$DailyLogsTableCreateCompanionBuilder =
     DailyLogsCompanion Function({
@@ -5076,6 +5808,418 @@ typedef $$GraftStatusTableProcessedTableManager =
       GraftStatusData,
       PrefetchHooks Function({bool dailyLogId})
     >;
+typedef $$ReminderSettingsTableCreateCompanionBuilder =
+    ReminderSettingsCompanion Function({
+      Value<int> id,
+      required int projectId,
+      Value<bool> dailyReminderEnabled,
+      Value<int> dailyReminderHour,
+      Value<int> dailyReminderMinute,
+      Value<bool> startDateReminderEnabled,
+      Value<bool> endDateReminderEnabled,
+      Value<DateTime?> expectedStartDate,
+      Value<DateTime?> expectedEndDate,
+    });
+typedef $$ReminderSettingsTableUpdateCompanionBuilder =
+    ReminderSettingsCompanion Function({
+      Value<int> id,
+      Value<int> projectId,
+      Value<bool> dailyReminderEnabled,
+      Value<int> dailyReminderHour,
+      Value<int> dailyReminderMinute,
+      Value<bool> startDateReminderEnabled,
+      Value<bool> endDateReminderEnabled,
+      Value<DateTime?> expectedStartDate,
+      Value<DateTime?> expectedEndDate,
+    });
+
+final class $$ReminderSettingsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $ReminderSettingsTable, ReminderSetting> {
+  $$ReminderSettingsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ProjectsTable _projectIdTable(_$AppDatabase db) =>
+      db.projects.createAlias(
+        $_aliasNameGenerator(db.reminderSettings.projectId, db.projects.id),
+      );
+
+  $$ProjectsTableProcessedTableManager get projectId {
+    final $_column = $_itemColumn<int>('project_id')!;
+
+    final manager = $$ProjectsTableTableManager(
+      $_db,
+      $_db.projects,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ReminderSettingsTableFilterComposer
+    extends Composer<_$AppDatabase, $ReminderSettingsTable> {
+  $$ReminderSettingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dailyReminderEnabled => $composableBuilder(
+    column: $table.dailyReminderEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dailyReminderHour => $composableBuilder(
+    column: $table.dailyReminderHour,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dailyReminderMinute => $composableBuilder(
+    column: $table.dailyReminderMinute,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get startDateReminderEnabled => $composableBuilder(
+    column: $table.startDateReminderEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get endDateReminderEnabled => $composableBuilder(
+    column: $table.endDateReminderEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get expectedStartDate => $composableBuilder(
+    column: $table.expectedStartDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get expectedEndDate => $composableBuilder(
+    column: $table.expectedEndDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ProjectsTableFilterComposer get projectId {
+    final $$ProjectsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.projectId,
+      referencedTable: $db.projects,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProjectsTableFilterComposer(
+            $db: $db,
+            $table: $db.projects,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReminderSettingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ReminderSettingsTable> {
+  $$ReminderSettingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dailyReminderEnabled => $composableBuilder(
+    column: $table.dailyReminderEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dailyReminderHour => $composableBuilder(
+    column: $table.dailyReminderHour,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dailyReminderMinute => $composableBuilder(
+    column: $table.dailyReminderMinute,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get startDateReminderEnabled => $composableBuilder(
+    column: $table.startDateReminderEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get endDateReminderEnabled => $composableBuilder(
+    column: $table.endDateReminderEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get expectedStartDate => $composableBuilder(
+    column: $table.expectedStartDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get expectedEndDate => $composableBuilder(
+    column: $table.expectedEndDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ProjectsTableOrderingComposer get projectId {
+    final $$ProjectsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.projectId,
+      referencedTable: $db.projects,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProjectsTableOrderingComposer(
+            $db: $db,
+            $table: $db.projects,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReminderSettingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ReminderSettingsTable> {
+  $$ReminderSettingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<bool> get dailyReminderEnabled => $composableBuilder(
+    column: $table.dailyReminderEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get dailyReminderHour => $composableBuilder(
+    column: $table.dailyReminderHour,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get dailyReminderMinute => $composableBuilder(
+    column: $table.dailyReminderMinute,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get startDateReminderEnabled => $composableBuilder(
+    column: $table.startDateReminderEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get endDateReminderEnabled => $composableBuilder(
+    column: $table.endDateReminderEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get expectedStartDate => $composableBuilder(
+    column: $table.expectedStartDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get expectedEndDate => $composableBuilder(
+    column: $table.expectedEndDate,
+    builder: (column) => column,
+  );
+
+  $$ProjectsTableAnnotationComposer get projectId {
+    final $$ProjectsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.projectId,
+      referencedTable: $db.projects,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProjectsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.projects,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReminderSettingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ReminderSettingsTable,
+          ReminderSetting,
+          $$ReminderSettingsTableFilterComposer,
+          $$ReminderSettingsTableOrderingComposer,
+          $$ReminderSettingsTableAnnotationComposer,
+          $$ReminderSettingsTableCreateCompanionBuilder,
+          $$ReminderSettingsTableUpdateCompanionBuilder,
+          (ReminderSetting, $$ReminderSettingsTableReferences),
+          ReminderSetting,
+          PrefetchHooks Function({bool projectId})
+        > {
+  $$ReminderSettingsTableTableManager(
+    _$AppDatabase db,
+    $ReminderSettingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReminderSettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReminderSettingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReminderSettingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> projectId = const Value.absent(),
+                Value<bool> dailyReminderEnabled = const Value.absent(),
+                Value<int> dailyReminderHour = const Value.absent(),
+                Value<int> dailyReminderMinute = const Value.absent(),
+                Value<bool> startDateReminderEnabled = const Value.absent(),
+                Value<bool> endDateReminderEnabled = const Value.absent(),
+                Value<DateTime?> expectedStartDate = const Value.absent(),
+                Value<DateTime?> expectedEndDate = const Value.absent(),
+              }) => ReminderSettingsCompanion(
+                id: id,
+                projectId: projectId,
+                dailyReminderEnabled: dailyReminderEnabled,
+                dailyReminderHour: dailyReminderHour,
+                dailyReminderMinute: dailyReminderMinute,
+                startDateReminderEnabled: startDateReminderEnabled,
+                endDateReminderEnabled: endDateReminderEnabled,
+                expectedStartDate: expectedStartDate,
+                expectedEndDate: expectedEndDate,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int projectId,
+                Value<bool> dailyReminderEnabled = const Value.absent(),
+                Value<int> dailyReminderHour = const Value.absent(),
+                Value<int> dailyReminderMinute = const Value.absent(),
+                Value<bool> startDateReminderEnabled = const Value.absent(),
+                Value<bool> endDateReminderEnabled = const Value.absent(),
+                Value<DateTime?> expectedStartDate = const Value.absent(),
+                Value<DateTime?> expectedEndDate = const Value.absent(),
+              }) => ReminderSettingsCompanion.insert(
+                id: id,
+                projectId: projectId,
+                dailyReminderEnabled: dailyReminderEnabled,
+                dailyReminderHour: dailyReminderHour,
+                dailyReminderMinute: dailyReminderMinute,
+                startDateReminderEnabled: startDateReminderEnabled,
+                endDateReminderEnabled: endDateReminderEnabled,
+                expectedStartDate: expectedStartDate,
+                expectedEndDate: expectedEndDate,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ReminderSettingsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({projectId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (projectId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.projectId,
+                                referencedTable:
+                                    $$ReminderSettingsTableReferences
+                                        ._projectIdTable(db),
+                                referencedColumn:
+                                    $$ReminderSettingsTableReferences
+                                        ._projectIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ReminderSettingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ReminderSettingsTable,
+      ReminderSetting,
+      $$ReminderSettingsTableFilterComposer,
+      $$ReminderSettingsTableOrderingComposer,
+      $$ReminderSettingsTableAnnotationComposer,
+      $$ReminderSettingsTableCreateCompanionBuilder,
+      $$ReminderSettingsTableUpdateCompanionBuilder,
+      (ReminderSetting, $$ReminderSettingsTableReferences),
+      ReminderSetting,
+      PrefetchHooks Function({bool projectId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5090,4 +6234,6 @@ class $AppDatabaseManager {
       $$ScionBatchesTableTableManager(_db, _db.scionBatches);
   $$GraftStatusTableTableManager get graftStatus =>
       $$GraftStatusTableTableManager(_db, _db.graftStatus);
+  $$ReminderSettingsTableTableManager get reminderSettings =>
+      $$ReminderSettingsTableTableManager(_db, _db.reminderSettings);
 }

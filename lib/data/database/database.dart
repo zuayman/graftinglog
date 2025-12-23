@@ -89,12 +89,29 @@ class GraftStatus extends Table {
   TextColumn get notes => text().nullable()(); // 備註（失敗原因等）
 }
 
-@DriftDatabase(tables: [Projects, DailyLogs, Actions, ScionBatches, GraftStatus])
+// ReminderSettings Table - 提醒設定
+class ReminderSettings extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get projectId => integer().references(Projects, #id)();
+
+  // Daily work reminder - 每日作業提醒
+  BoolColumn get dailyReminderEnabled => boolean().withDefault(const Constant(false))();
+  IntColumn get dailyReminderHour => integer().withDefault(const Constant(9))(); // 預設早上9點
+  IntColumn get dailyReminderMinute => integer().withDefault(const Constant(0))();
+
+  // Grafting period reminders - 嫁接期間提醒
+  BoolColumn get startDateReminderEnabled => boolean().withDefault(const Constant(false))();
+  BoolColumn get endDateReminderEnabled => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get expectedStartDate => dateTime().nullable()(); // 預計開始日期
+  DateTimeColumn get expectedEndDate => dateTime().nullable()(); // 預計結束日期（第30日）
+}
+
+@DriftDatabase(tables: [Projects, DailyLogs, Actions, ScionBatches, GraftStatus, ReminderSettings])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -155,6 +172,10 @@ class AppDatabase extends _$AppDatabase {
         await customStatement(
           'ALTER TABLE scion_batches ADD COLUMN notes TEXT',
         );
+      }
+      if (from < 7) {
+        // Migration from version 6 to 7: Add ReminderSettings table
+        await m.createTable(reminderSettings);
       }
     },
   );
@@ -351,6 +372,23 @@ class AppDatabase extends _$AppDatabase {
 
     return distribution;
   }
+
+  // Reminder Settings Queries
+  Future<ReminderSetting?> getReminderSettings(int projectId) async {
+    final query = select(reminderSettings)
+      ..where((r) => r.projectId.equals(projectId));
+    final results = await query.get();
+    return results.isEmpty ? null : results.first;
+  }
+
+  Future<int> createReminderSettings(ReminderSettingsCompanion settings) =>
+      into(reminderSettings).insert(settings);
+
+  Future<void> updateReminderSettings(ReminderSetting settings) =>
+      update(reminderSettings).replace(settings);
+
+  Future<void> deleteReminderSettings(int id) =>
+      (delete(reminderSettings)..where((r) => r.id.equals(id))).go();
 }
 
 LazyDatabase _openConnection() {

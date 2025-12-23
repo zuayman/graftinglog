@@ -9,6 +9,7 @@ import 'cost_dashboard_screen.dart';
 import 'export_screen.dart';
 import 'statistics_screen.dart';
 import 'charts_screen.dart';
+import 'reminder_settings_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -42,6 +43,21 @@ class HomeScreen extends ConsumerWidget {
               );
             },
             tooltip: '資料匯出',
+          ),
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              if (currentProjectId != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ReminderSettingsScreen(projectId: currentProjectId),
+                  ),
+                );
+              }
+            },
+            tooltip: '提醒設定',
           ),
         ],
       ),
