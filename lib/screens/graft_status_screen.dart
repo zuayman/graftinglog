@@ -36,8 +36,8 @@ class _GraftStatusScreenState extends ConsumerState<GraftStatusScreen> {
     super.dispose();
   }
 
-  Future<void> _saveStatus(String status, int count) async {
-    if (count <= 0) return;
+  Future<void> _saveStatus(String status, int percentage) async {
+    if (percentage <= 0) return;
 
     final db = ref.read(databaseProvider);
     await db.createGraftStatus(
@@ -45,7 +45,7 @@ class _GraftStatusScreenState extends ConsumerState<GraftStatusScreen> {
         dailyLogId: widget.dailyLogId,
         recordDate: DateTime.now(),
         status: status,
-        count: drift.Value(count),
+        count: drift.Value(percentage),
         notes: drift.Value(_notesController.text.isEmpty ? null : _notesController.text),
       ),
     );
@@ -58,11 +58,27 @@ class _GraftStatusScreenState extends ConsumerState<GraftStatusScreen> {
       final sprouting = int.tryParse(_sproutingController.text) ?? 0;
       final leafing = int.tryParse(_leafingController.text) ?? 0;
 
+      // Validate percentage range
+      if (blackHead < 0 || blackHead > 100 ||
+          dormant < 0 || dormant > 100 ||
+          sprouting < 0 || sprouting > 100 ||
+          leafing < 0 || leafing > 100) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('百分比必須在 0-100 之間'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
       if (blackHead + dormant + sprouting + leafing == 0) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('請至少輸入一個狀態的數量'),
+              content: Text('請至少輸入一個狀態的百分比'),
               backgroundColor: Colors.orange,
             ),
           );
@@ -129,7 +145,7 @@ class _GraftStatusScreenState extends ConsumerState<GraftStatusScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '記錄當日觀察到的接穗狀態數量，系統會自動計算成功率統計',
+                      '記錄當日觀察到的接穗狀態百分比，系統會自動計算成功率統計',
                       style: TextStyle(color: Colors.blue.shade900),
                     ),
                   ),
@@ -157,7 +173,7 @@ class _GraftStatusScreenState extends ConsumerState<GraftStatusScreen> {
                           elevation: 1,
                           child: ListTile(
                             leading: _getStatusIcon(status.status),
-                            title: Text('${status.status}: ${status.count}'),
+                            title: Text('${status.status}: ${status.count}%'),
                             subtitle: Text(
                               DateFormat('yyyy/MM/dd HH:mm')
                                   .format(status.recordDate),
@@ -229,7 +245,7 @@ class _GraftStatusScreenState extends ConsumerState<GraftStatusScreen> {
                     icon: Icons.circle,
                     color: Colors.grey,
                     controller: _blackHeadController,
-                    hint: '失敗、死亡的數量',
+                    hint: '失敗、死亡的百分比',
                   ),
                   const SizedBox(height: 16),
 
@@ -239,7 +255,7 @@ class _GraftStatusScreenState extends ConsumerState<GraftStatusScreen> {
                     icon: Icons.circle,
                     color: Colors.blue,
                     controller: _dormantController,
-                    hint: '尚未萌芽的數量',
+                    hint: '尚未萌芽的百分比',
                   ),
                   const SizedBox(height: 16),
 
@@ -249,7 +265,7 @@ class _GraftStatusScreenState extends ConsumerState<GraftStatusScreen> {
                     icon: Icons.circle,
                     color: Colors.lightGreen,
                     controller: _sproutingController,
-                    hint: '開始萌芽的數量',
+                    hint: '開始萌芽的百分比',
                   ),
                   const SizedBox(height: 16),
 
@@ -259,7 +275,7 @@ class _GraftStatusScreenState extends ConsumerState<GraftStatusScreen> {
                     icon: Icons.circle,
                     color: Colors.green,
                     controller: _leafingController,
-                    hint: '已展葉的數量',
+                    hint: '已展葉的百分比',
                   ),
                   const SizedBox(height: 24),
 
@@ -338,7 +354,7 @@ class _GraftStatusScreenState extends ConsumerState<GraftStatusScreen> {
                 horizontal: 12,
                 vertical: 12,
               ),
-              suffixText: '株',
+              suffixText: '%',
             ),
           ),
         ),
