@@ -7,7 +7,8 @@
       "Bash(flutter build:*)",
       "Bash(flutter run:*)",
       "Bash(flutter clean:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Grafting Log Flutter app\n\nThis is a Flutter application for managing grafting logs with the following features:\n- Daily grafting log management\n- Scion batch tracking\n- Cost dashboard and statistics\n- Data export functionality\n- SQLite database with drift\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")"
     ]
   }
 }
