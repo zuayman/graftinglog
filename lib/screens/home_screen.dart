@@ -201,116 +201,143 @@ class HomeScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 專案資訊
+          Text(
+            '${project.year} 年度 - ${project.variety}',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.attach_money, size: 16, color: Colors.grey[700]),
+              const SizedBox(width: 4),
+              Text('嫁接: \$${project.wageGraft.toStringAsFixed(0)}'),
+              const SizedBox(width: 16),
+              Icon(Icons.shopping_bag, size: 16, color: Colors.grey[700]),
+              const SizedBox(width: 4),
+              Text('套袋: \$${project.wageBag.toStringAsFixed(0)}'),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 功能按鈕網格 (2x2)
+          Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${project.year} 年度 - ${project.variety}',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text('嫁接工資: \$${project.wageGraft.toStringAsFixed(0)}'),
-                        const SizedBox(width: 24),
-                        Text('套袋工資: \$${project.wageBag.toStringAsFixed(0)}'),
-                      ],
-                    ),
-                  ],
+                child: _buildQuickActionButton(
+                  context,
+                  icon: Icons.analytics,
+                  label: '成本分析',
+                  color: Colors.blue,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CostDashboardScreen(projectId: project.id),
+                      ),
+                    );
+                  },
                 ),
               ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  FilledButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CostDashboardScreen(projectId: project.id),
-                        ),
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      elevation: 2,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildQuickActionButton(
+                  context,
+                  icon: Icons.insights,
+                  label: '成功統計',
+                  color: Colors.green,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StatisticsScreen(projectId: project.id),
                       ),
-                    ),
-                    icon: const Icon(Icons.analytics, size: 20),
-                    label: const Text('成本'),
-                  ),
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => StatisticsScreen(projectId: project.id),
-                        ),
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      elevation: 2,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildQuickActionButton(
+                  context,
+                  icon: Icons.bar_chart,
+                  label: '趨勢圖表',
+                  color: Colors.purple,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChartsScreen(projectId: project.id),
                       ),
-                    ),
-                    icon: const Icon(Icons.insights, size: 20),
-                    label: const Text('統計'),
-                  ),
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChartsScreen(projectId: project.id),
-                        ),
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      elevation: 2,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildQuickActionButton(
+                  context,
+                  icon: Icons.map,
+                  label: '區域分析',
+                  color: Colors.orange,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AreaAnalysisScreen(projectId: project.id),
                       ),
-                    ),
-                    icon: const Icon(Icons.bar_chart, size: 20),
-                    label: const Text('圖表'),
-                  ),
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AreaAnalysisScreen(projectId: project.id),
-                        ),
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      elevation: 2,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(Icons.map, size: 20),
-                    label: const Text('區域'),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 32),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
