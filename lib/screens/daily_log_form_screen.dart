@@ -778,13 +778,15 @@ class _DailyLogFormScreenState extends ConsumerState<DailyLogFormScreen> {
                     decoration: const InputDecoration(
                       labelText: '黑頭',
                       border: OutlineInputBorder(),
-                      suffixText: '株',
+                      suffixText: '%',
                       prefixIcon: Icon(Icons.circle, color: Colors.grey, size: 16),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) return null;
-                      if (int.tryParse(value) == null) return '請輸入數字';
+                      final num = int.tryParse(value);
+                      if (num == null) return '請輸入數字';
+                      if (num < 0 || num > 100) return '請輸入 0-100';
                       return null;
                     },
                   ),
@@ -796,13 +798,15 @@ class _DailyLogFormScreenState extends ConsumerState<DailyLogFormScreen> {
                     decoration: const InputDecoration(
                       labelText: '休眠',
                       border: OutlineInputBorder(),
-                      suffixText: '株',
+                      suffixText: '%',
                       prefixIcon: Icon(Icons.circle, color: Colors.blue, size: 16),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) return null;
-                      if (int.tryParse(value) == null) return '請輸入數字';
+                      final num = int.tryParse(value);
+                      if (num == null) return '請輸入數字';
+                      if (num < 0 || num > 100) return '請輸入 0-100';
                       return null;
                     },
                   ),
@@ -818,13 +822,15 @@ class _DailyLogFormScreenState extends ConsumerState<DailyLogFormScreen> {
                     decoration: const InputDecoration(
                       labelText: '萌芽',
                       border: OutlineInputBorder(),
-                      suffixText: '株',
+                      suffixText: '%',
                       prefixIcon: Icon(Icons.circle, color: Colors.lightGreen, size: 16),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) return null;
-                      if (int.tryParse(value) == null) return '請輸入數字';
+                      final num = int.tryParse(value);
+                      if (num == null) return '請輸入數字';
+                      if (num < 0 || num > 100) return '請輸入 0-100';
                       return null;
                     },
                   ),
@@ -836,13 +842,15 @@ class _DailyLogFormScreenState extends ConsumerState<DailyLogFormScreen> {
                     decoration: const InputDecoration(
                       labelText: '展葉',
                       border: OutlineInputBorder(),
-                      suffixText: '株',
+                      suffixText: '%',
                       prefixIcon: Icon(Icons.circle, color: Colors.green, size: 16),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) return null;
-                      if (int.tryParse(value) == null) return '請輸入數字';
+                      final num = int.tryParse(value);
+                      if (num == null) return '請輸入數字';
+                      if (num < 0 || num > 100) return '請輸入 0-100';
                       return null;
                     },
                   ),

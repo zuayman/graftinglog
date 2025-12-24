@@ -10,6 +10,7 @@ import 'export_screen.dart';
 import 'statistics_screen.dart';
 import 'charts_screen.dart';
 import 'reminder_settings_screen.dart';
+import 'area_analysis_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -284,6 +285,26 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     icon: const Icon(Icons.bar_chart, size: 20),
                     label: const Text('圖表'),
+                  ),
+                  const SizedBox(height: 8),
+                  FilledButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AreaAnalysisScreen(projectId: project.id),
+                        ),
+                      );
+                    },
+                    style: FilledButton.styleFrom(
+                      elevation: 2,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.map, size: 20),
+                    label: const Text('區域'),
                   ),
                 ],
               ),
