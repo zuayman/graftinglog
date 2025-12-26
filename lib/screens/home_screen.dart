@@ -11,6 +11,8 @@ import 'statistics_screen.dart';
 import 'charts_screen.dart';
 import 'reminder_settings_screen.dart';
 import 'area_analysis_screen.dart';
+import 'task_checklist_screen.dart';
+import 'debug_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -25,6 +27,21 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('嫁接日誌'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.checklist),
+            onPressed: () {
+              if (currentProjectId != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        TaskChecklistScreen(projectId: currentProjectId),
+                  ),
+                );
+              }
+            },
+            tooltip: '作業檢查清單',
+          ),
           IconButton(
             icon: const Icon(Icons.inventory_2),
             onPressed: () {
@@ -59,6 +76,16 @@ class HomeScreen extends ConsumerWidget {
               }
             },
             tooltip: '提醒設定',
+          ),
+          IconButton(
+            icon: const Icon(Icons.build),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const DebugScreen()),
+              );
+            },
+            tooltip: '維護工具',
           ),
         ],
       ),
@@ -201,11 +228,45 @@ class HomeScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 專案資訊
-          Text(
-            '${project.year} 年度 - ${project.variety}',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+          // 專案資訊 - 可點擊進入專案管理
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProjectListScreen()),
+              );
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${project.year} 年度 - ${project.variety}',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '點擊切換專案',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.swap_horiz,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 8),

@@ -65,8 +65,54 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _budgetLimitMeta = const VerificationMeta(
+    'budgetLimit',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, year, variety, wageGraft, wageBag];
+  late final GeneratedColumn<double> budgetLimit = GeneratedColumn<double>(
+    'budget_limit',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _budgetAlertEnabledMeta =
+      const VerificationMeta('budgetAlertEnabled');
+  @override
+  late final GeneratedColumn<bool> budgetAlertEnabled = GeneratedColumn<bool>(
+    'budget_alert_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("budget_alert_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _budgetAlertThresholdMeta =
+      const VerificationMeta('budgetAlertThreshold');
+  @override
+  late final GeneratedColumn<double> budgetAlertThreshold =
+      GeneratedColumn<double>(
+        'budget_alert_threshold',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0.8),
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    year,
+    variety,
+    wageGraft,
+    wageBag,
+    budgetLimit,
+    budgetAlertEnabled,
+    budgetAlertThreshold,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -110,6 +156,33 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
     } else if (isInserting) {
       context.missing(_wageBagMeta);
     }
+    if (data.containsKey('budget_limit')) {
+      context.handle(
+        _budgetLimitMeta,
+        budgetLimit.isAcceptableOrUnknown(
+          data['budget_limit']!,
+          _budgetLimitMeta,
+        ),
+      );
+    }
+    if (data.containsKey('budget_alert_enabled')) {
+      context.handle(
+        _budgetAlertEnabledMeta,
+        budgetAlertEnabled.isAcceptableOrUnknown(
+          data['budget_alert_enabled']!,
+          _budgetAlertEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('budget_alert_threshold')) {
+      context.handle(
+        _budgetAlertThresholdMeta,
+        budgetAlertThreshold.isAcceptableOrUnknown(
+          data['budget_alert_threshold']!,
+          _budgetAlertThresholdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -139,6 +212,18 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
         DriftSqlType.double,
         data['${effectivePrefix}wage_bag'],
       )!,
+      budgetLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}budget_limit'],
+      ),
+      budgetAlertEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}budget_alert_enabled'],
+      )!,
+      budgetAlertThreshold: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}budget_alert_threshold'],
+      )!,
     );
   }
 
@@ -154,12 +239,18 @@ class Project extends DataClass implements Insertable<Project> {
   final String variety;
   final double wageGraft;
   final double wageBag;
+  final double? budgetLimit;
+  final bool budgetAlertEnabled;
+  final double budgetAlertThreshold;
   const Project({
     required this.id,
     required this.year,
     required this.variety,
     required this.wageGraft,
     required this.wageBag,
+    this.budgetLimit,
+    required this.budgetAlertEnabled,
+    required this.budgetAlertThreshold,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -169,6 +260,11 @@ class Project extends DataClass implements Insertable<Project> {
     map['variety'] = Variable<String>(variety);
     map['wage_graft'] = Variable<double>(wageGraft);
     map['wage_bag'] = Variable<double>(wageBag);
+    if (!nullToAbsent || budgetLimit != null) {
+      map['budget_limit'] = Variable<double>(budgetLimit);
+    }
+    map['budget_alert_enabled'] = Variable<bool>(budgetAlertEnabled);
+    map['budget_alert_threshold'] = Variable<double>(budgetAlertThreshold);
     return map;
   }
 
@@ -179,6 +275,11 @@ class Project extends DataClass implements Insertable<Project> {
       variety: Value(variety),
       wageGraft: Value(wageGraft),
       wageBag: Value(wageBag),
+      budgetLimit: budgetLimit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(budgetLimit),
+      budgetAlertEnabled: Value(budgetAlertEnabled),
+      budgetAlertThreshold: Value(budgetAlertThreshold),
     );
   }
 
@@ -193,6 +294,11 @@ class Project extends DataClass implements Insertable<Project> {
       variety: serializer.fromJson<String>(json['variety']),
       wageGraft: serializer.fromJson<double>(json['wageGraft']),
       wageBag: serializer.fromJson<double>(json['wageBag']),
+      budgetLimit: serializer.fromJson<double?>(json['budgetLimit']),
+      budgetAlertEnabled: serializer.fromJson<bool>(json['budgetAlertEnabled']),
+      budgetAlertThreshold: serializer.fromJson<double>(
+        json['budgetAlertThreshold'],
+      ),
     );
   }
   @override
@@ -204,6 +310,9 @@ class Project extends DataClass implements Insertable<Project> {
       'variety': serializer.toJson<String>(variety),
       'wageGraft': serializer.toJson<double>(wageGraft),
       'wageBag': serializer.toJson<double>(wageBag),
+      'budgetLimit': serializer.toJson<double?>(budgetLimit),
+      'budgetAlertEnabled': serializer.toJson<bool>(budgetAlertEnabled),
+      'budgetAlertThreshold': serializer.toJson<double>(budgetAlertThreshold),
     };
   }
 
@@ -213,12 +322,18 @@ class Project extends DataClass implements Insertable<Project> {
     String? variety,
     double? wageGraft,
     double? wageBag,
+    Value<double?> budgetLimit = const Value.absent(),
+    bool? budgetAlertEnabled,
+    double? budgetAlertThreshold,
   }) => Project(
     id: id ?? this.id,
     year: year ?? this.year,
     variety: variety ?? this.variety,
     wageGraft: wageGraft ?? this.wageGraft,
     wageBag: wageBag ?? this.wageBag,
+    budgetLimit: budgetLimit.present ? budgetLimit.value : this.budgetLimit,
+    budgetAlertEnabled: budgetAlertEnabled ?? this.budgetAlertEnabled,
+    budgetAlertThreshold: budgetAlertThreshold ?? this.budgetAlertThreshold,
   );
   Project copyWithCompanion(ProjectsCompanion data) {
     return Project(
@@ -227,6 +342,15 @@ class Project extends DataClass implements Insertable<Project> {
       variety: data.variety.present ? data.variety.value : this.variety,
       wageGraft: data.wageGraft.present ? data.wageGraft.value : this.wageGraft,
       wageBag: data.wageBag.present ? data.wageBag.value : this.wageBag,
+      budgetLimit: data.budgetLimit.present
+          ? data.budgetLimit.value
+          : this.budgetLimit,
+      budgetAlertEnabled: data.budgetAlertEnabled.present
+          ? data.budgetAlertEnabled.value
+          : this.budgetAlertEnabled,
+      budgetAlertThreshold: data.budgetAlertThreshold.present
+          ? data.budgetAlertThreshold.value
+          : this.budgetAlertThreshold,
     );
   }
 
@@ -237,13 +361,25 @@ class Project extends DataClass implements Insertable<Project> {
           ..write('year: $year, ')
           ..write('variety: $variety, ')
           ..write('wageGraft: $wageGraft, ')
-          ..write('wageBag: $wageBag')
+          ..write('wageBag: $wageBag, ')
+          ..write('budgetLimit: $budgetLimit, ')
+          ..write('budgetAlertEnabled: $budgetAlertEnabled, ')
+          ..write('budgetAlertThreshold: $budgetAlertThreshold')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, year, variety, wageGraft, wageBag);
+  int get hashCode => Object.hash(
+    id,
+    year,
+    variety,
+    wageGraft,
+    wageBag,
+    budgetLimit,
+    budgetAlertEnabled,
+    budgetAlertThreshold,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -252,7 +388,10 @@ class Project extends DataClass implements Insertable<Project> {
           other.year == this.year &&
           other.variety == this.variety &&
           other.wageGraft == this.wageGraft &&
-          other.wageBag == this.wageBag);
+          other.wageBag == this.wageBag &&
+          other.budgetLimit == this.budgetLimit &&
+          other.budgetAlertEnabled == this.budgetAlertEnabled &&
+          other.budgetAlertThreshold == this.budgetAlertThreshold);
 }
 
 class ProjectsCompanion extends UpdateCompanion<Project> {
@@ -261,12 +400,18 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
   final Value<String> variety;
   final Value<double> wageGraft;
   final Value<double> wageBag;
+  final Value<double?> budgetLimit;
+  final Value<bool> budgetAlertEnabled;
+  final Value<double> budgetAlertThreshold;
   const ProjectsCompanion({
     this.id = const Value.absent(),
     this.year = const Value.absent(),
     this.variety = const Value.absent(),
     this.wageGraft = const Value.absent(),
     this.wageBag = const Value.absent(),
+    this.budgetLimit = const Value.absent(),
+    this.budgetAlertEnabled = const Value.absent(),
+    this.budgetAlertThreshold = const Value.absent(),
   });
   ProjectsCompanion.insert({
     this.id = const Value.absent(),
@@ -274,6 +419,9 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     this.variety = const Value.absent(),
     required double wageGraft,
     required double wageBag,
+    this.budgetLimit = const Value.absent(),
+    this.budgetAlertEnabled = const Value.absent(),
+    this.budgetAlertThreshold = const Value.absent(),
   }) : wageGraft = Value(wageGraft),
        wageBag = Value(wageBag);
   static Insertable<Project> custom({
@@ -282,6 +430,9 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     Expression<String>? variety,
     Expression<double>? wageGraft,
     Expression<double>? wageBag,
+    Expression<double>? budgetLimit,
+    Expression<bool>? budgetAlertEnabled,
+    Expression<double>? budgetAlertThreshold,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -289,6 +440,11 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
       if (variety != null) 'variety': variety,
       if (wageGraft != null) 'wage_graft': wageGraft,
       if (wageBag != null) 'wage_bag': wageBag,
+      if (budgetLimit != null) 'budget_limit': budgetLimit,
+      if (budgetAlertEnabled != null)
+        'budget_alert_enabled': budgetAlertEnabled,
+      if (budgetAlertThreshold != null)
+        'budget_alert_threshold': budgetAlertThreshold,
     });
   }
 
@@ -298,6 +454,9 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     Value<String>? variety,
     Value<double>? wageGraft,
     Value<double>? wageBag,
+    Value<double?>? budgetLimit,
+    Value<bool>? budgetAlertEnabled,
+    Value<double>? budgetAlertThreshold,
   }) {
     return ProjectsCompanion(
       id: id ?? this.id,
@@ -305,6 +464,9 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
       variety: variety ?? this.variety,
       wageGraft: wageGraft ?? this.wageGraft,
       wageBag: wageBag ?? this.wageBag,
+      budgetLimit: budgetLimit ?? this.budgetLimit,
+      budgetAlertEnabled: budgetAlertEnabled ?? this.budgetAlertEnabled,
+      budgetAlertThreshold: budgetAlertThreshold ?? this.budgetAlertThreshold,
     );
   }
 
@@ -326,6 +488,17 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     if (wageBag.present) {
       map['wage_bag'] = Variable<double>(wageBag.value);
     }
+    if (budgetLimit.present) {
+      map['budget_limit'] = Variable<double>(budgetLimit.value);
+    }
+    if (budgetAlertEnabled.present) {
+      map['budget_alert_enabled'] = Variable<bool>(budgetAlertEnabled.value);
+    }
+    if (budgetAlertThreshold.present) {
+      map['budget_alert_threshold'] = Variable<double>(
+        budgetAlertThreshold.value,
+      );
+    }
     return map;
   }
 
@@ -336,7 +509,10 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
           ..write('year: $year, ')
           ..write('variety: $variety, ')
           ..write('wageGraft: $wageGraft, ')
-          ..write('wageBag: $wageBag')
+          ..write('wageBag: $wageBag, ')
+          ..write('budgetLimit: $budgetLimit, ')
+          ..write('budgetAlertEnabled: $budgetAlertEnabled, ')
+          ..write('budgetAlertThreshold: $budgetAlertThreshold')
           ..write(')'))
         .toString();
   }
@@ -2929,6 +3105,47 @@ class $ReminderSettingsTable extends ReminderSettings
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _rainyDaysAlertEnabledMeta =
+      const VerificationMeta('rainyDaysAlertEnabled');
+  @override
+  late final GeneratedColumn<bool> rainyDaysAlertEnabled =
+      GeneratedColumn<bool>(
+        'rainy_days_alert_enabled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("rainy_days_alert_enabled" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _consecutiveRainyDaysThresholdMeta =
+      const VerificationMeta('consecutiveRainyDaysThreshold');
+  @override
+  late final GeneratedColumn<int> consecutiveRainyDaysThreshold =
+      GeneratedColumn<int>(
+        'consecutive_rainy_days_threshold',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(3),
+      );
+  static const VerificationMeta _lowTempAlertEnabledMeta =
+      const VerificationMeta('lowTempAlertEnabled');
+  @override
+  late final GeneratedColumn<bool> lowTempAlertEnabled = GeneratedColumn<bool>(
+    'low_temp_alert_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("low_temp_alert_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2940,6 +3157,9 @@ class $ReminderSettingsTable extends ReminderSettings
     endDateReminderEnabled,
     expectedStartDate,
     expectedEndDate,
+    rainyDaysAlertEnabled,
+    consecutiveRainyDaysThreshold,
+    lowTempAlertEnabled,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3027,6 +3247,33 @@ class $ReminderSettingsTable extends ReminderSettings
         ),
       );
     }
+    if (data.containsKey('rainy_days_alert_enabled')) {
+      context.handle(
+        _rainyDaysAlertEnabledMeta,
+        rainyDaysAlertEnabled.isAcceptableOrUnknown(
+          data['rainy_days_alert_enabled']!,
+          _rainyDaysAlertEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('consecutive_rainy_days_threshold')) {
+      context.handle(
+        _consecutiveRainyDaysThresholdMeta,
+        consecutiveRainyDaysThreshold.isAcceptableOrUnknown(
+          data['consecutive_rainy_days_threshold']!,
+          _consecutiveRainyDaysThresholdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('low_temp_alert_enabled')) {
+      context.handle(
+        _lowTempAlertEnabledMeta,
+        lowTempAlertEnabled.isAcceptableOrUnknown(
+          data['low_temp_alert_enabled']!,
+          _lowTempAlertEnabledMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3072,6 +3319,18 @@ class $ReminderSettingsTable extends ReminderSettings
         DriftSqlType.dateTime,
         data['${effectivePrefix}expected_end_date'],
       ),
+      rainyDaysAlertEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}rainy_days_alert_enabled'],
+      )!,
+      consecutiveRainyDaysThreshold: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}consecutive_rainy_days_threshold'],
+      )!,
+      lowTempAlertEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}low_temp_alert_enabled'],
+      )!,
     );
   }
 
@@ -3091,6 +3350,9 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
   final bool endDateReminderEnabled;
   final DateTime? expectedStartDate;
   final DateTime? expectedEndDate;
+  final bool rainyDaysAlertEnabled;
+  final int consecutiveRainyDaysThreshold;
+  final bool lowTempAlertEnabled;
   const ReminderSetting({
     required this.id,
     required this.projectId,
@@ -3101,6 +3363,9 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
     required this.endDateReminderEnabled,
     this.expectedStartDate,
     this.expectedEndDate,
+    required this.rainyDaysAlertEnabled,
+    required this.consecutiveRainyDaysThreshold,
+    required this.lowTempAlertEnabled,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3120,6 +3385,11 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
     if (!nullToAbsent || expectedEndDate != null) {
       map['expected_end_date'] = Variable<DateTime>(expectedEndDate);
     }
+    map['rainy_days_alert_enabled'] = Variable<bool>(rainyDaysAlertEnabled);
+    map['consecutive_rainy_days_threshold'] = Variable<int>(
+      consecutiveRainyDaysThreshold,
+    );
+    map['low_temp_alert_enabled'] = Variable<bool>(lowTempAlertEnabled);
     return map;
   }
 
@@ -3138,6 +3408,9 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
       expectedEndDate: expectedEndDate == null && nullToAbsent
           ? const Value.absent()
           : Value(expectedEndDate),
+      rainyDaysAlertEnabled: Value(rainyDaysAlertEnabled),
+      consecutiveRainyDaysThreshold: Value(consecutiveRainyDaysThreshold),
+      lowTempAlertEnabled: Value(lowTempAlertEnabled),
     );
   }
 
@@ -3166,6 +3439,15 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
         json['expectedStartDate'],
       ),
       expectedEndDate: serializer.fromJson<DateTime?>(json['expectedEndDate']),
+      rainyDaysAlertEnabled: serializer.fromJson<bool>(
+        json['rainyDaysAlertEnabled'],
+      ),
+      consecutiveRainyDaysThreshold: serializer.fromJson<int>(
+        json['consecutiveRainyDaysThreshold'],
+      ),
+      lowTempAlertEnabled: serializer.fromJson<bool>(
+        json['lowTempAlertEnabled'],
+      ),
     );
   }
   @override
@@ -3183,6 +3465,11 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
       'endDateReminderEnabled': serializer.toJson<bool>(endDateReminderEnabled),
       'expectedStartDate': serializer.toJson<DateTime?>(expectedStartDate),
       'expectedEndDate': serializer.toJson<DateTime?>(expectedEndDate),
+      'rainyDaysAlertEnabled': serializer.toJson<bool>(rainyDaysAlertEnabled),
+      'consecutiveRainyDaysThreshold': serializer.toJson<int>(
+        consecutiveRainyDaysThreshold,
+      ),
+      'lowTempAlertEnabled': serializer.toJson<bool>(lowTempAlertEnabled),
     };
   }
 
@@ -3196,6 +3483,9 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
     bool? endDateReminderEnabled,
     Value<DateTime?> expectedStartDate = const Value.absent(),
     Value<DateTime?> expectedEndDate = const Value.absent(),
+    bool? rainyDaysAlertEnabled,
+    int? consecutiveRainyDaysThreshold,
+    bool? lowTempAlertEnabled,
   }) => ReminderSetting(
     id: id ?? this.id,
     projectId: projectId ?? this.projectId,
@@ -3212,6 +3502,10 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
     expectedEndDate: expectedEndDate.present
         ? expectedEndDate.value
         : this.expectedEndDate,
+    rainyDaysAlertEnabled: rainyDaysAlertEnabled ?? this.rainyDaysAlertEnabled,
+    consecutiveRainyDaysThreshold:
+        consecutiveRainyDaysThreshold ?? this.consecutiveRainyDaysThreshold,
+    lowTempAlertEnabled: lowTempAlertEnabled ?? this.lowTempAlertEnabled,
   );
   ReminderSetting copyWithCompanion(ReminderSettingsCompanion data) {
     return ReminderSetting(
@@ -3238,6 +3532,15 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
       expectedEndDate: data.expectedEndDate.present
           ? data.expectedEndDate.value
           : this.expectedEndDate,
+      rainyDaysAlertEnabled: data.rainyDaysAlertEnabled.present
+          ? data.rainyDaysAlertEnabled.value
+          : this.rainyDaysAlertEnabled,
+      consecutiveRainyDaysThreshold: data.consecutiveRainyDaysThreshold.present
+          ? data.consecutiveRainyDaysThreshold.value
+          : this.consecutiveRainyDaysThreshold,
+      lowTempAlertEnabled: data.lowTempAlertEnabled.present
+          ? data.lowTempAlertEnabled.value
+          : this.lowTempAlertEnabled,
     );
   }
 
@@ -3252,7 +3555,12 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
           ..write('startDateReminderEnabled: $startDateReminderEnabled, ')
           ..write('endDateReminderEnabled: $endDateReminderEnabled, ')
           ..write('expectedStartDate: $expectedStartDate, ')
-          ..write('expectedEndDate: $expectedEndDate')
+          ..write('expectedEndDate: $expectedEndDate, ')
+          ..write('rainyDaysAlertEnabled: $rainyDaysAlertEnabled, ')
+          ..write(
+            'consecutiveRainyDaysThreshold: $consecutiveRainyDaysThreshold, ',
+          )
+          ..write('lowTempAlertEnabled: $lowTempAlertEnabled')
           ..write(')'))
         .toString();
   }
@@ -3268,6 +3576,9 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
     endDateReminderEnabled,
     expectedStartDate,
     expectedEndDate,
+    rainyDaysAlertEnabled,
+    consecutiveRainyDaysThreshold,
+    lowTempAlertEnabled,
   );
   @override
   bool operator ==(Object other) =>
@@ -3281,7 +3592,11 @@ class ReminderSetting extends DataClass implements Insertable<ReminderSetting> {
           other.startDateReminderEnabled == this.startDateReminderEnabled &&
           other.endDateReminderEnabled == this.endDateReminderEnabled &&
           other.expectedStartDate == this.expectedStartDate &&
-          other.expectedEndDate == this.expectedEndDate);
+          other.expectedEndDate == this.expectedEndDate &&
+          other.rainyDaysAlertEnabled == this.rainyDaysAlertEnabled &&
+          other.consecutiveRainyDaysThreshold ==
+              this.consecutiveRainyDaysThreshold &&
+          other.lowTempAlertEnabled == this.lowTempAlertEnabled);
 }
 
 class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
@@ -3294,6 +3609,9 @@ class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
   final Value<bool> endDateReminderEnabled;
   final Value<DateTime?> expectedStartDate;
   final Value<DateTime?> expectedEndDate;
+  final Value<bool> rainyDaysAlertEnabled;
+  final Value<int> consecutiveRainyDaysThreshold;
+  final Value<bool> lowTempAlertEnabled;
   const ReminderSettingsCompanion({
     this.id = const Value.absent(),
     this.projectId = const Value.absent(),
@@ -3304,6 +3622,9 @@ class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
     this.endDateReminderEnabled = const Value.absent(),
     this.expectedStartDate = const Value.absent(),
     this.expectedEndDate = const Value.absent(),
+    this.rainyDaysAlertEnabled = const Value.absent(),
+    this.consecutiveRainyDaysThreshold = const Value.absent(),
+    this.lowTempAlertEnabled = const Value.absent(),
   });
   ReminderSettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -3315,6 +3636,9 @@ class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
     this.endDateReminderEnabled = const Value.absent(),
     this.expectedStartDate = const Value.absent(),
     this.expectedEndDate = const Value.absent(),
+    this.rainyDaysAlertEnabled = const Value.absent(),
+    this.consecutiveRainyDaysThreshold = const Value.absent(),
+    this.lowTempAlertEnabled = const Value.absent(),
   }) : projectId = Value(projectId);
   static Insertable<ReminderSetting> custom({
     Expression<int>? id,
@@ -3326,6 +3650,9 @@ class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
     Expression<bool>? endDateReminderEnabled,
     Expression<DateTime>? expectedStartDate,
     Expression<DateTime>? expectedEndDate,
+    Expression<bool>? rainyDaysAlertEnabled,
+    Expression<int>? consecutiveRainyDaysThreshold,
+    Expression<bool>? lowTempAlertEnabled,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3341,6 +3668,12 @@ class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
         'end_date_reminder_enabled': endDateReminderEnabled,
       if (expectedStartDate != null) 'expected_start_date': expectedStartDate,
       if (expectedEndDate != null) 'expected_end_date': expectedEndDate,
+      if (rainyDaysAlertEnabled != null)
+        'rainy_days_alert_enabled': rainyDaysAlertEnabled,
+      if (consecutiveRainyDaysThreshold != null)
+        'consecutive_rainy_days_threshold': consecutiveRainyDaysThreshold,
+      if (lowTempAlertEnabled != null)
+        'low_temp_alert_enabled': lowTempAlertEnabled,
     });
   }
 
@@ -3354,6 +3687,9 @@ class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
     Value<bool>? endDateReminderEnabled,
     Value<DateTime?>? expectedStartDate,
     Value<DateTime?>? expectedEndDate,
+    Value<bool>? rainyDaysAlertEnabled,
+    Value<int>? consecutiveRainyDaysThreshold,
+    Value<bool>? lowTempAlertEnabled,
   }) {
     return ReminderSettingsCompanion(
       id: id ?? this.id,
@@ -3367,6 +3703,11 @@ class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
           endDateReminderEnabled ?? this.endDateReminderEnabled,
       expectedStartDate: expectedStartDate ?? this.expectedStartDate,
       expectedEndDate: expectedEndDate ?? this.expectedEndDate,
+      rainyDaysAlertEnabled:
+          rainyDaysAlertEnabled ?? this.rainyDaysAlertEnabled,
+      consecutiveRainyDaysThreshold:
+          consecutiveRainyDaysThreshold ?? this.consecutiveRainyDaysThreshold,
+      lowTempAlertEnabled: lowTempAlertEnabled ?? this.lowTempAlertEnabled,
     );
   }
 
@@ -3406,6 +3747,19 @@ class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
     if (expectedEndDate.present) {
       map['expected_end_date'] = Variable<DateTime>(expectedEndDate.value);
     }
+    if (rainyDaysAlertEnabled.present) {
+      map['rainy_days_alert_enabled'] = Variable<bool>(
+        rainyDaysAlertEnabled.value,
+      );
+    }
+    if (consecutiveRainyDaysThreshold.present) {
+      map['consecutive_rainy_days_threshold'] = Variable<int>(
+        consecutiveRainyDaysThreshold.value,
+      );
+    }
+    if (lowTempAlertEnabled.present) {
+      map['low_temp_alert_enabled'] = Variable<bool>(lowTempAlertEnabled.value);
+    }
     return map;
   }
 
@@ -3420,7 +3774,12 @@ class ReminderSettingsCompanion extends UpdateCompanion<ReminderSetting> {
           ..write('startDateReminderEnabled: $startDateReminderEnabled, ')
           ..write('endDateReminderEnabled: $endDateReminderEnabled, ')
           ..write('expectedStartDate: $expectedStartDate, ')
-          ..write('expectedEndDate: $expectedEndDate')
+          ..write('expectedEndDate: $expectedEndDate, ')
+          ..write('rainyDaysAlertEnabled: $rainyDaysAlertEnabled, ')
+          ..write(
+            'consecutiveRainyDaysThreshold: $consecutiveRainyDaysThreshold, ',
+          )
+          ..write('lowTempAlertEnabled: $lowTempAlertEnabled')
           ..write(')'))
         .toString();
   }
@@ -3458,6 +3817,9 @@ typedef $$ProjectsTableCreateCompanionBuilder =
       Value<String> variety,
       required double wageGraft,
       required double wageBag,
+      Value<double?> budgetLimit,
+      Value<bool> budgetAlertEnabled,
+      Value<double> budgetAlertThreshold,
     });
 typedef $$ProjectsTableUpdateCompanionBuilder =
     ProjectsCompanion Function({
@@ -3466,6 +3828,9 @@ typedef $$ProjectsTableUpdateCompanionBuilder =
       Value<String> variety,
       Value<double> wageGraft,
       Value<double> wageBag,
+      Value<double?> budgetLimit,
+      Value<bool> budgetAlertEnabled,
+      Value<double> budgetAlertThreshold,
     });
 
 final class $$ProjectsTableReferences
@@ -3563,6 +3928,21 @@ class $$ProjectsTableFilterComposer
 
   ColumnFilters<double> get wageBag => $composableBuilder(
     column: $table.wageBag,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get budgetLimit => $composableBuilder(
+    column: $table.budgetLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get budgetAlertEnabled => $composableBuilder(
+    column: $table.budgetAlertEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get budgetAlertThreshold => $composableBuilder(
+    column: $table.budgetAlertThreshold,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3675,6 +4055,21 @@ class $$ProjectsTableOrderingComposer
     column: $table.wageBag,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<double> get budgetLimit => $composableBuilder(
+    column: $table.budgetLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get budgetAlertEnabled => $composableBuilder(
+    column: $table.budgetAlertEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get budgetAlertThreshold => $composableBuilder(
+    column: $table.budgetAlertThreshold,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ProjectsTableAnnotationComposer
@@ -3700,6 +4095,21 @@ class $$ProjectsTableAnnotationComposer
 
   GeneratedColumn<double> get wageBag =>
       $composableBuilder(column: $table.wageBag, builder: (column) => column);
+
+  GeneratedColumn<double> get budgetLimit => $composableBuilder(
+    column: $table.budgetLimit,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get budgetAlertEnabled => $composableBuilder(
+    column: $table.budgetAlertEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get budgetAlertThreshold => $composableBuilder(
+    column: $table.budgetAlertThreshold,
+    builder: (column) => column,
+  );
 
   Expression<T> dailyLogsRefs<T extends Object>(
     Expression<T> Function($$DailyLogsTableAnnotationComposer a) f,
@@ -3814,12 +4224,18 @@ class $$ProjectsTableTableManager
                 Value<String> variety = const Value.absent(),
                 Value<double> wageGraft = const Value.absent(),
                 Value<double> wageBag = const Value.absent(),
+                Value<double?> budgetLimit = const Value.absent(),
+                Value<bool> budgetAlertEnabled = const Value.absent(),
+                Value<double> budgetAlertThreshold = const Value.absent(),
               }) => ProjectsCompanion(
                 id: id,
                 year: year,
                 variety: variety,
                 wageGraft: wageGraft,
                 wageBag: wageBag,
+                budgetLimit: budgetLimit,
+                budgetAlertEnabled: budgetAlertEnabled,
+                budgetAlertThreshold: budgetAlertThreshold,
               ),
           createCompanionCallback:
               ({
@@ -3828,12 +4244,18 @@ class $$ProjectsTableTableManager
                 Value<String> variety = const Value.absent(),
                 required double wageGraft,
                 required double wageBag,
+                Value<double?> budgetLimit = const Value.absent(),
+                Value<bool> budgetAlertEnabled = const Value.absent(),
+                Value<double> budgetAlertThreshold = const Value.absent(),
               }) => ProjectsCompanion.insert(
                 id: id,
                 year: year,
                 variety: variety,
                 wageGraft: wageGraft,
                 wageBag: wageBag,
+                budgetLimit: budgetLimit,
+                budgetAlertEnabled: budgetAlertEnabled,
+                budgetAlertThreshold: budgetAlertThreshold,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -5819,6 +6241,9 @@ typedef $$ReminderSettingsTableCreateCompanionBuilder =
       Value<bool> endDateReminderEnabled,
       Value<DateTime?> expectedStartDate,
       Value<DateTime?> expectedEndDate,
+      Value<bool> rainyDaysAlertEnabled,
+      Value<int> consecutiveRainyDaysThreshold,
+      Value<bool> lowTempAlertEnabled,
     });
 typedef $$ReminderSettingsTableUpdateCompanionBuilder =
     ReminderSettingsCompanion Function({
@@ -5831,6 +6256,9 @@ typedef $$ReminderSettingsTableUpdateCompanionBuilder =
       Value<bool> endDateReminderEnabled,
       Value<DateTime?> expectedStartDate,
       Value<DateTime?> expectedEndDate,
+      Value<bool> rainyDaysAlertEnabled,
+      Value<int> consecutiveRainyDaysThreshold,
+      Value<bool> lowTempAlertEnabled,
     });
 
 final class $$ReminderSettingsTableReferences
@@ -5911,6 +6339,21 @@ class $$ReminderSettingsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get rainyDaysAlertEnabled => $composableBuilder(
+    column: $table.rainyDaysAlertEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get consecutiveRainyDaysThreshold => $composableBuilder(
+    column: $table.consecutiveRainyDaysThreshold,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get lowTempAlertEnabled => $composableBuilder(
+    column: $table.lowTempAlertEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$ProjectsTableFilterComposer get projectId {
     final $$ProjectsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -5981,6 +6424,21 @@ class $$ReminderSettingsTableOrderingComposer
 
   ColumnOrderings<DateTime> get expectedEndDate => $composableBuilder(
     column: $table.expectedEndDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get rainyDaysAlertEnabled => $composableBuilder(
+    column: $table.rainyDaysAlertEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get consecutiveRainyDaysThreshold => $composableBuilder(
+    column: $table.consecutiveRainyDaysThreshold,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get lowTempAlertEnabled => $composableBuilder(
+    column: $table.lowTempAlertEnabled,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -6055,6 +6513,21 @@ class $$ReminderSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get rainyDaysAlertEnabled => $composableBuilder(
+    column: $table.rainyDaysAlertEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get consecutiveRainyDaysThreshold => $composableBuilder(
+    column: $table.consecutiveRainyDaysThreshold,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get lowTempAlertEnabled => $composableBuilder(
+    column: $table.lowTempAlertEnabled,
+    builder: (column) => column,
+  );
+
   $$ProjectsTableAnnotationComposer get projectId {
     final $$ProjectsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -6118,6 +6591,9 @@ class $$ReminderSettingsTableTableManager
                 Value<bool> endDateReminderEnabled = const Value.absent(),
                 Value<DateTime?> expectedStartDate = const Value.absent(),
                 Value<DateTime?> expectedEndDate = const Value.absent(),
+                Value<bool> rainyDaysAlertEnabled = const Value.absent(),
+                Value<int> consecutiveRainyDaysThreshold = const Value.absent(),
+                Value<bool> lowTempAlertEnabled = const Value.absent(),
               }) => ReminderSettingsCompanion(
                 id: id,
                 projectId: projectId,
@@ -6128,6 +6604,9 @@ class $$ReminderSettingsTableTableManager
                 endDateReminderEnabled: endDateReminderEnabled,
                 expectedStartDate: expectedStartDate,
                 expectedEndDate: expectedEndDate,
+                rainyDaysAlertEnabled: rainyDaysAlertEnabled,
+                consecutiveRainyDaysThreshold: consecutiveRainyDaysThreshold,
+                lowTempAlertEnabled: lowTempAlertEnabled,
               ),
           createCompanionCallback:
               ({
@@ -6140,6 +6619,9 @@ class $$ReminderSettingsTableTableManager
                 Value<bool> endDateReminderEnabled = const Value.absent(),
                 Value<DateTime?> expectedStartDate = const Value.absent(),
                 Value<DateTime?> expectedEndDate = const Value.absent(),
+                Value<bool> rainyDaysAlertEnabled = const Value.absent(),
+                Value<int> consecutiveRainyDaysThreshold = const Value.absent(),
+                Value<bool> lowTempAlertEnabled = const Value.absent(),
               }) => ReminderSettingsCompanion.insert(
                 id: id,
                 projectId: projectId,
@@ -6150,6 +6632,9 @@ class $$ReminderSettingsTableTableManager
                 endDateReminderEnabled: endDateReminderEnabled,
                 expectedStartDate: expectedStartDate,
                 expectedEndDate: expectedEndDate,
+                rainyDaysAlertEnabled: rainyDaysAlertEnabled,
+                consecutiveRainyDaysThreshold: consecutiveRainyDaysThreshold,
+                lowTempAlertEnabled: lowTempAlertEnabled,
               ),
           withReferenceMapper: (p0) => p0
               .map(

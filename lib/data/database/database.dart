@@ -13,6 +13,11 @@ class Projects extends Table {
   TextColumn get variety => text().withDefault(const Constant('甘露'))();
   RealColumn get wageGraft => real()();
   RealColumn get wageBag => real()();
+
+  // Budget - 預算管理
+  RealColumn get budgetLimit => real().nullable()(); // 預算上限
+  BoolColumn get budgetAlertEnabled => boolean().withDefault(const Constant(false))(); // 預算警示開關
+  RealColumn get budgetAlertThreshold => real().withDefault(const Constant(0.8))(); // 預算警示閾值（80%）
 }
 
 // DailyLogs Table - 每日日誌
@@ -104,6 +109,11 @@ class ReminderSettings extends Table {
   BoolColumn get endDateReminderEnabled => boolean().withDefault(const Constant(false))();
   DateTimeColumn get expectedStartDate => dateTime().nullable()(); // 預計開始日期
   DateTimeColumn get expectedEndDate => dateTime().nullable()(); // 預計結束日期（第30日）
+
+  // Weather alerts - 天候警示
+  BoolColumn get rainyDaysAlertEnabled => boolean().withDefault(const Constant(false))();
+  IntColumn get consecutiveRainyDaysThreshold => integer().withDefault(const Constant(3))(); // 連續雨天閾值（預設3天）
+  BoolColumn get lowTempAlertEnabled => boolean().withDefault(const Constant(false))();
 }
 
 @DriftDatabase(tables: [Projects, DailyLogs, Actions, ScionBatches, GraftStatus, ReminderSettings])
@@ -111,7 +121,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -119,6 +129,7 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
     },
     onUpgrade: (Migrator m, int from, int to) async {
+      // Original migration code for older versions
       if (from < 2) {
         // Migration from version 1 to 2: Add material cost columns
         // Note: For existing databases, you may need to recreate or handle carefully
@@ -177,6 +188,59 @@ class AppDatabase extends _$AppDatabase {
         // Migration from version 6 to 7: Add ReminderSettings table
         await m.createTable(reminderSettings);
       }
+      if (from < 8) {
+        // Migration from version 7 to 8: Add weather alert columns to ReminderSettings
+        // Drop and recreate ReminderSettings table to ensure all columns exist
+        try {
+          await customStatement('DROP TABLE IF EXISTS reminder_settings_old');
+          await customStatement('ALTER TABLE reminder_settings RENAME TO reminder_settings_old');
+          await m.createTable(reminderSettings);
+          // Copy old data if exists
+          await customStatement('''
+            INSERT INTO reminder_settings (id, project_id, daily_reminder_enabled, daily_reminder_hour, daily_reminder_minute,
+                                           start_date_reminder_enabled, end_date_reminder_enabled, expected_start_date, expected_end_date,
+                                           rainy_days_alert_enabled, consecutive_rainy_days_threshold, low_temp_alert_enabled)
+            SELECT id, project_id, daily_reminder_enabled, daily_reminder_hour, daily_reminder_minute,
+                   COALESCE(start_date_reminder_enabled, 0), COALESCE(end_date_reminder_enabled, 0),
+                   expected_start_date, expected_end_date,
+                   0, 3, 0
+            FROM reminder_settings_old
+          ''');
+          await customStatement('DROP TABLE reminder_settings_old');
+        } catch (e) {
+          // If migration fails, just create the table fresh
+          try {
+            await customStatement('DROP TABLE IF EXISTS reminder_settings');
+            await m.createTable(reminderSettings);
+          } catch (createError) {
+            // Ignore if table creation also fails
+          }
+        }
+      }
+      if (from < 9) {
+        // Migration from version 8 to 9: Add budget columns to Projects
+        try {
+          await customStatement(
+            'ALTER TABLE projects ADD COLUMN budget_limit REAL',
+          );
+        } catch (e) {
+          // Column might already exist, ignore error
+        }
+        try {
+          await customStatement(
+            'ALTER TABLE projects ADD COLUMN budget_alert_enabled INTEGER NOT NULL DEFAULT 0',
+          );
+        } catch (e) {
+          // Column might already exist, ignore error
+        }
+        try {
+          await customStatement(
+            'ALTER TABLE projects ADD COLUMN budget_alert_threshold REAL NOT NULL DEFAULT 0.8',
+          );
+        } catch (e) {
+          // Column might already exist, ignore error
+        }
+      }
     },
   );
 
@@ -208,6 +272,14 @@ class AppDatabase extends _$AppDatabase {
       ..orderBy([(l) => OrderingTerm.desc(l.date)])
       ..limit(1);
     return await query.getSingleOrNull();
+  }
+
+  Future<List<DailyLog>> getRecentDailyLogs(int projectId, {int limit = 10}) async {
+    final query = select(dailyLogs)
+      ..where((l) => l.projectId.equals(projectId))
+      ..orderBy([(l) => OrderingTerm.desc(l.date)])
+      ..limit(limit);
+    return await query.get();
   }
 
   Future<int> createDailyLog(DailyLogsCompanion log) =>
@@ -394,7 +466,7 @@ class AppDatabase extends _$AppDatabase {
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'graftinglog.sqlite'));
+    final file = File(p.join(dbFolder.path, 'db.sqlite'));
     return NativeDatabase(file);
   });
 }

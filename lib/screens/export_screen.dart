@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/database_provider.dart';
 import '../services/csv_export_service.dart';
+import 'backup_screen.dart';
 
 class ExportScreen extends ConsumerWidget {
   const ExportScreen({super.key});
@@ -48,6 +49,8 @@ class ExportScreen extends ConsumerWidget {
                   buttonText: '匯出批次 CSV',
                   onPressed: () => _exportBatches(context, ref, project.id),
                 ),
+                const SizedBox(height: 16),
+                _buildBackupCard(context),
               ],
             ),
           );
@@ -133,6 +136,64 @@ class ExportScreen extends ConsumerWidget {
                 ),
                 icon: const Icon(Icons.download),
                 label: Text(buttonText),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackupCard(BuildContext context) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      color: Colors.orange.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.backup, color: Colors.orange.shade700),
+                const SizedBox(width: 12),
+                Text(
+                  '資料庫備份',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '建立完整的資料庫備份，並可從備份還原資料',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const BackupScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  elevation: 2,
+                  backgroundColor: Colors.orange.shade700,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.backup),
+                label: const Text('管理備份'),
               ),
             ),
           ],

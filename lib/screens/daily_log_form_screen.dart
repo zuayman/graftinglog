@@ -4,6 +4,8 @@ import 'package:drift/drift.dart' as drift;
 import 'package:intl/intl.dart';
 import '../data/database/database.dart';
 import '../providers/database_provider.dart';
+import '../services/weather_alert_service.dart';
+import '../services/notification_service.dart';
 import 'scion_batch_screen.dart';
 
 class DailyLogFormScreen extends ConsumerStatefulWidget {
@@ -337,6 +339,9 @@ class _DailyLogFormScreenState extends ConsumerState<DailyLogFormScreen> {
         await db.createGraftStatus(status);
       }
 
+      // Check weather alerts
+      await _checkWeatherAlerts();
+
       // Invalidate both providers to ensure refresh
       ref.invalidate(dailyLogsProvider);
       ref.invalidate(projectDailyLogsProvider(widget.projectId));
@@ -350,6 +355,19 @@ class _DailyLogFormScreenState extends ConsumerState<DailyLogFormScreen> {
           SnackBar(content: Text('儲存失敗: $e')),
         );
       }
+    }
+  }
+
+  Future<void> _checkWeatherAlerts() async {
+    final db = ref.read(databaseProvider);
+    final notificationService = NotificationService();
+    final weatherAlertService = WeatherAlertService(db, notificationService);
+
+    try {
+      await weatherAlertService.checkWeatherAlerts(widget.projectId);
+    } catch (e) {
+      // Silently handle errors in weather alerts
+      debugPrint('天候警示檢查失敗: $e');
     }
   }
 

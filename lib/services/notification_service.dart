@@ -69,7 +69,49 @@ class NotificationService {
           sound: true,
         );
 
-    return granted ?? true; // Android doesn't need runtime permission
+    // For Android 13+, also request notification permission
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final androidPlugin = _notifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      final androidGranted = await androidPlugin?.requestNotificationsPermission();
+      return androidGranted ?? true;
+    }
+
+    return granted ?? true;
+  }
+
+  /// Check if exact alarms are allowed (Android 12+)
+  Future<bool> canScheduleExactAlarms() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return true; // iOS doesn't have this restriction
+    }
+
+    try {
+      final androidPlugin = _notifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      final canSchedule = await androidPlugin?.canScheduleExactNotifications();
+      return canSchedule ?? false;
+    } catch (e) {
+      debugPrint('Error checking exact alarm permission: $e');
+      return false;
+    }
+  }
+
+  /// Request exact alarm permission (Android 12+)
+  Future<bool> requestExactAlarmPermission() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return true;
+    }
+
+    try {
+      final androidPlugin = _notifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      final granted = await androidPlugin?.requestExactAlarmsPermission();
+      return granted ?? false;
+    } catch (e) {
+      debugPrint('Error requesting exact alarm permission: $e');
+      return false;
+    }
   }
 
   /// Schedule a daily reminder at specific time
@@ -81,6 +123,12 @@ class NotificationService {
     required int minute,
   }) async {
     if (!_initialized) await initialize();
+
+    // Check if we can schedule exact alarms
+    final canSchedule = await canScheduleExactAlarms();
+    final scheduleMode = canSchedule
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
 
     await _notifications.zonedSchedule(
       id,
@@ -102,7 +150,7 @@ class NotificationService {
           presentSound: true,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: scheduleMode,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
@@ -137,6 +185,58 @@ class NotificationService {
   /// Cancel all notifications
   Future<void> cancelAllNotifications() async {
     await _notifications.cancelAll();
+  }
+
+  /// Schedule a notification for a specific date and time
+  Future<void> scheduleNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+    String? payload,
+  }) async {
+    if (!_initialized) await initialize();
+
+    // Convert to TZDateTime
+    final tz.TZDateTime tzScheduledDate = tz.TZDateTime.from(
+      scheduledDate,
+      tz.local,
+    );
+
+    // Only schedule if the date is in the future
+    if (tzScheduledDate.isAfter(tz.TZDateTime.now(tz.local))) {
+      // Check if we can schedule exact alarms
+      final canSchedule = await canScheduleExactAlarms();
+      final scheduleMode = canSchedule
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle;
+
+      await _notifications.zonedSchedule(
+        id,
+        title,
+        body,
+        tzScheduledDate,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'date_reminder',
+            '日期提醒',
+            channelDescription: '重要日期提醒通知',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        androidScheduleMode: scheduleMode,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
+      );
+    }
   }
 
   /// Show an immediate notification
@@ -182,4 +282,6 @@ class NotificationIds {
   static const int dailyWorkReminder = 1;
   static const int graftingStartReminder = 2;
   static const int graftingEndReminder = 3;
+  static const int weatherAlert = 4;
+  static const int taskChecklist = 5;
 }

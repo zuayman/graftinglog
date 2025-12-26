@@ -20,6 +20,13 @@ class _ReminderSettingsScreenState
   bool _dailyReminderEnabled = false;
   int _selectedHour = 9;
   int _selectedMinute = 0;
+  bool _startDateReminderEnabled = false;
+  bool _endDateReminderEnabled = false;
+  DateTime? _expectedStartDate;
+  DateTime? _expectedEndDate;
+  bool _rainyDaysAlertEnabled = false;
+  int _consecutiveRainyDaysThreshold = 3;
+  bool _lowTempAlertEnabled = false;
   bool _isLoading = true;
   ReminderSetting? _currentSettings;
 
@@ -39,6 +46,13 @@ class _ReminderSettingsScreenState
         _dailyReminderEnabled = settings.dailyReminderEnabled;
         _selectedHour = settings.dailyReminderHour;
         _selectedMinute = settings.dailyReminderMinute;
+        _startDateReminderEnabled = settings.startDateReminderEnabled;
+        _endDateReminderEnabled = settings.endDateReminderEnabled;
+        _expectedStartDate = settings.expectedStartDate;
+        _expectedEndDate = settings.expectedEndDate;
+        _rainyDaysAlertEnabled = settings.rainyDaysAlertEnabled;
+        _consecutiveRainyDaysThreshold = settings.consecutiveRainyDaysThreshold;
+        _lowTempAlertEnabled = settings.lowTempAlertEnabled;
         _isLoading = false;
       });
     } else {
@@ -52,9 +66,34 @@ class _ReminderSettingsScreenState
     final db = ref.read(databaseProvider);
     final notificationService = NotificationService();
 
-    // Request permissions first
+    // Validate date reminders
+    if (_startDateReminderEnabled && _expectedStartDate == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('請選擇預計開始日期'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (_endDateReminderEnabled && _expectedEndDate == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('請選擇預計完成日期'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Request notification permissions first
     final permissionGranted = await notificationService.requestPermissions();
-    if (!permissionGranted && _dailyReminderEnabled) {
+    if (!permissionGranted && (_dailyReminderEnabled || _startDateReminderEnabled || _endDateReminderEnabled)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -66,6 +105,53 @@ class _ReminderSettingsScreenState
       return;
     }
 
+    // Check and request exact alarm permission for Android
+    if (_dailyReminderEnabled || _startDateReminderEnabled || _endDateReminderEnabled) {
+      final canScheduleExact = await notificationService.canScheduleExactAlarms();
+      if (!canScheduleExact) {
+        // Show dialog to explain and request permission
+        if (mounted) {
+          final shouldRequest = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('需要精確鬧鐘權限'),
+              content: const Text(
+                '為了在精確的時間發送提醒通知，應用程式需要「精確鬧鐘」權限。\n\n'
+                '點擊「前往設定」後，請在系統設定中允許此應用程式使用精確鬧鐘功能。',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('取消'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('前往設定'),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldRequest == true) {
+            await notificationService.requestExactAlarmPermission();
+            // Check again after user returns from settings
+            final nowCan = await notificationService.canScheduleExactAlarms();
+            if (!nowCan && mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('未授予精確鬧鐘權限，提醒時間可能不精確'),
+                  backgroundColor: Colors.orange,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+            }
+          } else {
+            return; // User cancelled
+          }
+        }
+      }
+    }
+
     try {
       if (_currentSettings == null) {
         // Create new settings
@@ -75,6 +161,13 @@ class _ReminderSettingsScreenState
             dailyReminderEnabled: drift.Value(_dailyReminderEnabled),
             dailyReminderHour: drift.Value(_selectedHour),
             dailyReminderMinute: drift.Value(_selectedMinute),
+            startDateReminderEnabled: drift.Value(_startDateReminderEnabled),
+            endDateReminderEnabled: drift.Value(_endDateReminderEnabled),
+            expectedStartDate: drift.Value(_expectedStartDate),
+            expectedEndDate: drift.Value(_expectedEndDate),
+            rainyDaysAlertEnabled: drift.Value(_rainyDaysAlertEnabled),
+            consecutiveRainyDaysThreshold: drift.Value(_consecutiveRainyDaysThreshold),
+            lowTempAlertEnabled: drift.Value(_lowTempAlertEnabled),
           ),
         );
       } else {
@@ -84,11 +177,18 @@ class _ReminderSettingsScreenState
             dailyReminderEnabled: _dailyReminderEnabled,
             dailyReminderHour: _selectedHour,
             dailyReminderMinute: _selectedMinute,
+            startDateReminderEnabled: _startDateReminderEnabled,
+            endDateReminderEnabled: _endDateReminderEnabled,
+            expectedStartDate: drift.Value(_expectedStartDate),
+            expectedEndDate: drift.Value(_expectedEndDate),
+            rainyDaysAlertEnabled: _rainyDaysAlertEnabled,
+            consecutiveRainyDaysThreshold: _consecutiveRainyDaysThreshold,
+            lowTempAlertEnabled: _lowTempAlertEnabled,
           ),
         );
       }
 
-      // Schedule or cancel notification
+      // Schedule or cancel daily notification
       if (_dailyReminderEnabled) {
         await notificationService.scheduleDailyReminder(
           id: NotificationIds.dailyWorkReminder,
@@ -100,6 +200,46 @@ class _ReminderSettingsScreenState
       } else {
         await notificationService
             .cancelNotification(NotificationIds.dailyWorkReminder);
+      }
+
+      // Schedule or cancel start date notification
+      if (_startDateReminderEnabled && _expectedStartDate != null) {
+        final reminderDate = DateTime(
+          _expectedStartDate!.year,
+          _expectedStartDate!.month,
+          _expectedStartDate!.day,
+          9, // 早上9點提醒
+          0,
+        );
+        await notificationService.scheduleNotification(
+          id: NotificationIds.graftingStartReminder,
+          title: '嫁接開始提醒',
+          body: '今天是預計的嫁接開始日，記得開始記錄！',
+          scheduledDate: reminderDate,
+        );
+      } else {
+        await notificationService
+            .cancelNotification(NotificationIds.graftingStartReminder);
+      }
+
+      // Schedule or cancel end date notification
+      if (_endDateReminderEnabled && _expectedEndDate != null) {
+        final reminderDate = DateTime(
+          _expectedEndDate!.year,
+          _expectedEndDate!.month,
+          _expectedEndDate!.day,
+          9, // 早上9點提醒
+          0,
+        );
+        await notificationService.scheduleNotification(
+          id: NotificationIds.graftingEndReminder,
+          title: '嫁接完成提醒',
+          body: '今天是預計的嫁接第30日，記得檢查接穗狀態！',
+          scheduledDate: reminderDate,
+        );
+      } else {
+        await notificationService
+            .cancelNotification(NotificationIds.graftingEndReminder);
       }
 
       if (mounted) {
@@ -337,6 +477,241 @@ class _ReminderSettingsScreenState
                       textAlign: TextAlign.center,
                     ),
                   ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Key Date Reminders Section
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.event_note,
+                        color: Theme.of(context).colorScheme.secondary,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        '關鍵日期提醒',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Start Date Reminder
+                  SwitchListTile(
+                    title: const Text('嫁接開始日提醒'),
+                    subtitle: const Text('提醒您開始嫁接作業'),
+                    value: _startDateReminderEnabled,
+                    onChanged: (bool value) {
+                      setState(() {
+                        _startDateReminderEnabled = value;
+                      });
+                    },
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  if (_startDateReminderEnabled) ...[
+                    const SizedBox(height: 8),
+                    ListTile(
+                      leading: const Icon(Icons.calendar_today),
+                      title: const Text('預計開始日期'),
+                      subtitle: Text(
+                        _expectedStartDate != null
+                            ? '${_expectedStartDate!.year}/${_expectedStartDate!.month}/${_expectedStartDate!.day}'
+                            : '點擊選擇日期',
+                      ),
+                      trailing: const Icon(Icons.edit),
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _expectedStartDate ?? DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2030),
+                        );
+                        if (date != null) {
+                          setState(() {
+                            _expectedStartDate = date;
+                          });
+                        }
+                      },
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ],
+
+                  const Divider(height: 24),
+
+                  // End Date Reminder
+                  SwitchListTile(
+                    title: const Text('嫁接完成日提醒（第30日）'),
+                    subtitle: const Text('提醒您檢查接穗狀態'),
+                    value: _endDateReminderEnabled,
+                    onChanged: (bool value) {
+                      setState(() {
+                        _endDateReminderEnabled = value;
+                      });
+                    },
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  if (_endDateReminderEnabled) ...[
+                    const SizedBox(height: 8),
+                    ListTile(
+                      leading: const Icon(Icons.calendar_today),
+                      title: const Text('預計完成日期'),
+                      subtitle: Text(
+                        _expectedEndDate != null
+                            ? '${_expectedEndDate!.year}/${_expectedEndDate!.month}/${_expectedEndDate!.day}'
+                            : '點擊選擇日期',
+                      ),
+                      trailing: const Icon(Icons.edit),
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _expectedEndDate ??
+                              (_expectedStartDate?.add(const Duration(days: 30)) ?? DateTime.now()),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2030),
+                        );
+                        if (date != null) {
+                          setState(() {
+                            _expectedEndDate = date;
+                          });
+                        }
+                      },
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Weather Alerts Section
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.cloud_outlined,
+                        color: Theme.of(context).colorScheme.tertiary,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        '天候警示',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Rainy Days Alert
+                  SwitchListTile(
+                    title: const Text('連續雨天警告'),
+                    subtitle: const Text('偵測連續雨天並提醒'),
+                    value: _rainyDaysAlertEnabled,
+                    onChanged: (bool value) {
+                      setState(() {
+                        _rainyDaysAlertEnabled = value;
+                      });
+                    },
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  if (_rainyDaysAlertEnabled) ...[
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.water_drop, size: 20),
+                          const SizedBox(width: 12),
+                          const Text('連續'),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: DropdownButton<int>(
+                              value: _consecutiveRainyDaysThreshold,
+                              underline: const SizedBox(),
+                              items: [2, 3, 4, 5, 7].map((days) {
+                                return DropdownMenuItem(
+                                  value: days,
+                                  child: Text('$days'),
+                                );
+                              }).toList(),
+                              onChanged: (int? value) {
+                                if (value != null) {
+                                  setState(() {
+                                    _consecutiveRainyDaysThreshold = value;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('天雨天時發送警示'),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const Divider(height: 24),
+
+                  // Low Temperature Alert
+                  SwitchListTile(
+                    title: const Text('低溫警告'),
+                    subtitle: const Text('低溫天候時提醒保護接穗'),
+                    value: _lowTempAlertEnabled,
+                    onChanged: (bool value) {
+                      setState(() {
+                        _lowTempAlertEnabled = value;
+                      });
+                    },
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ],
               ),
             ),

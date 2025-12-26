@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../data/database/database.dart';
 import '../providers/database_provider.dart';
+import 'budget_settings_screen.dart';
 
 class CostDashboardScreen extends ConsumerWidget {
   final int projectId;
@@ -17,9 +19,26 @@ class CostDashboardScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('成本儀表板'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BudgetSettingsScreen(projectId: projectId),
+                ),
+              );
+            },
+            tooltip: '預算設定',
+          ),
+        ],
       ),
-      body: FutureBuilder<Map<String, double>>(
-        future: db.getCostStatistics(projectId),
+      body: FutureBuilder<(Map<String, double>, Project)>(
+        future: Future.wait([
+          db.getCostStatistics(projectId),
+          db.getProject(projectId),
+        ]).then((results) => (results[0] as Map<String, double>, results[1] as Project)),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -29,13 +48,18 @@ class CostDashboardScreen extends ConsumerWidget {
             return Center(child: Text('錯誤: ${snapshot.error}'));
           }
 
-          final stats = snapshot.data!;
+          final (stats, project) = snapshot.data!;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Budget Progress Card (if budget is set)
+                if (project.budgetLimit != null) ...[
+                  _buildBudgetProgressCard(context, stats, project),
+                  const SizedBox(height: 16),
+                ],
                 _buildTotalCostCard(context, stats),
                 const SizedBox(height: 16),
                 _buildCostBreakdownCard(context, stats),
@@ -297,6 +321,198 @@ class CostDashboardScreen extends ConsumerWidget {
                 ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBudgetProgressCard(BuildContext context, Map<String, double> stats, Project project) {
+    final totalCost = stats['totalCost']!;
+    final budgetLimit = project.budgetLimit!;
+    final budgetUsagePercentage = (totalCost / budgetLimit * 100).clamp(0, 100);
+    final remainingBudget = budgetLimit - totalCost;
+    final isOverBudget = totalCost > budgetLimit;
+    final isNearingLimit = project.budgetAlertEnabled &&
+                           budgetUsagePercentage >= (project.budgetAlertThreshold * 100);
+
+    Color progressColor;
+    if (isOverBudget) {
+      progressColor = Colors.red;
+    } else if (isNearingLimit) {
+      progressColor = Colors.orange;
+    } else {
+      progressColor = Colors.green;
+    }
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  isOverBudget ? Icons.warning_amber : Icons.account_balance_wallet,
+                  color: progressColor,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '預算使用狀況',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+                if (isOverBudget)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.red[100],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '超支',
+                      style: TextStyle(
+                        color: Colors.red[900],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  )
+                else if (isNearingLimit)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[100],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '警告',
+                      style: TextStyle(
+                        color: Colors.orange[900],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Progress Bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: (budgetUsagePercentage / 100).clamp(0, 1),
+                backgroundColor: Colors.grey[200],
+                valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                minHeight: 16,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Budget Info
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '已使用',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '\$${totalCost.toStringAsFixed(0)}',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: progressColor,
+                          ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      '使用比例',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${budgetUsagePercentage.toStringAsFixed(1)}%',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: progressColor,
+                          ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      isOverBudget ? '超支金額' : '剩餘預算',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '\$${remainingBudget.abs().toStringAsFixed(0)}',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isOverBudget ? Colors.red : Colors.green,
+                          ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Budget Limit
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '預算上限',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  Text(
+                    '\$${budgetLimit.toStringAsFixed(0)}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
