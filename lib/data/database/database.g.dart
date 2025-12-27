@@ -1777,6 +1777,18 @@ class $ScionBatchesTable extends ScionBatches
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _receivingDateMeta = const VerificationMeta(
+    'receivingDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> receivingDate =
+      GeneratedColumn<DateTime>(
+        'receiving_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _harvestDateMeta = const VerificationMeta(
     'harvestDate',
   );
@@ -1862,6 +1874,7 @@ class $ScionBatchesTable extends ScionBatches
     sourceType,
     supplierName,
     supplierContact,
+    receivingDate,
     harvestDate,
     coldStorageStartDate,
     coldStorageDays,
@@ -1939,6 +1952,15 @@ class $ScionBatchesTable extends ScionBatches
         supplierContact.isAcceptableOrUnknown(
           data['supplier_contact']!,
           _supplierContactMeta,
+        ),
+      );
+    }
+    if (data.containsKey('receiving_date')) {
+      context.handle(
+        _receivingDateMeta,
+        receivingDate.isAcceptableOrUnknown(
+          data['receiving_date']!,
+          _receivingDateMeta,
         ),
       );
     }
@@ -2037,6 +2059,10 @@ class $ScionBatchesTable extends ScionBatches
         DriftSqlType.string,
         data['${effectivePrefix}supplier_contact'],
       ),
+      receivingDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}receiving_date'],
+      ),
       harvestDate: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}harvest_date'],
@@ -2083,6 +2109,7 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
   final String sourceType;
   final String? supplierName;
   final String? supplierContact;
+  final DateTime? receivingDate;
   final DateTime? harvestDate;
   final DateTime? coldStorageStartDate;
   final int? coldStorageDays;
@@ -2099,6 +2126,7 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
     required this.sourceType,
     this.supplierName,
     this.supplierContact,
+    this.receivingDate,
     this.harvestDate,
     this.coldStorageStartDate,
     this.coldStorageDays,
@@ -2123,6 +2151,9 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
     }
     if (!nullToAbsent || supplierContact != null) {
       map['supplier_contact'] = Variable<String>(supplierContact);
+    }
+    if (!nullToAbsent || receivingDate != null) {
+      map['receiving_date'] = Variable<DateTime>(receivingDate);
     }
     if (!nullToAbsent || harvestDate != null) {
       map['harvest_date'] = Variable<DateTime>(harvestDate);
@@ -2164,6 +2195,9 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
       supplierContact: supplierContact == null && nullToAbsent
           ? const Value.absent()
           : Value(supplierContact),
+      receivingDate: receivingDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(receivingDate),
       harvestDate: harvestDate == null && nullToAbsent
           ? const Value.absent()
           : Value(harvestDate),
@@ -2202,6 +2236,7 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
       sourceType: serializer.fromJson<String>(json['sourceType']),
       supplierName: serializer.fromJson<String?>(json['supplierName']),
       supplierContact: serializer.fromJson<String?>(json['supplierContact']),
+      receivingDate: serializer.fromJson<DateTime?>(json['receivingDate']),
       harvestDate: serializer.fromJson<DateTime?>(json['harvestDate']),
       coldStorageStartDate: serializer.fromJson<DateTime?>(
         json['coldStorageStartDate'],
@@ -2225,6 +2260,7 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
       'sourceType': serializer.toJson<String>(sourceType),
       'supplierName': serializer.toJson<String?>(supplierName),
       'supplierContact': serializer.toJson<String?>(supplierContact),
+      'receivingDate': serializer.toJson<DateTime?>(receivingDate),
       'harvestDate': serializer.toJson<DateTime?>(harvestDate),
       'coldStorageStartDate': serializer.toJson<DateTime?>(
         coldStorageStartDate,
@@ -2246,6 +2282,7 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
     String? sourceType,
     Value<String?> supplierName = const Value.absent(),
     Value<String?> supplierContact = const Value.absent(),
+    Value<DateTime?> receivingDate = const Value.absent(),
     Value<DateTime?> harvestDate = const Value.absent(),
     Value<DateTime?> coldStorageStartDate = const Value.absent(),
     Value<int?> coldStorageDays = const Value.absent(),
@@ -2264,6 +2301,9 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
     supplierContact: supplierContact.present
         ? supplierContact.value
         : this.supplierContact,
+    receivingDate: receivingDate.present
+        ? receivingDate.value
+        : this.receivingDate,
     harvestDate: harvestDate.present ? harvestDate.value : this.harvestDate,
     coldStorageStartDate: coldStorageStartDate.present
         ? coldStorageStartDate.value
@@ -2296,6 +2336,9 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
       supplierContact: data.supplierContact.present
           ? data.supplierContact.value
           : this.supplierContact,
+      receivingDate: data.receivingDate.present
+          ? data.receivingDate.value
+          : this.receivingDate,
       harvestDate: data.harvestDate.present
           ? data.harvestDate.value
           : this.harvestDate,
@@ -2327,6 +2370,7 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
           ..write('sourceType: $sourceType, ')
           ..write('supplierName: $supplierName, ')
           ..write('supplierContact: $supplierContact, ')
+          ..write('receivingDate: $receivingDate, ')
           ..write('harvestDate: $harvestDate, ')
           ..write('coldStorageStartDate: $coldStorageStartDate, ')
           ..write('coldStorageDays: $coldStorageDays, ')
@@ -2348,6 +2392,7 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
     sourceType,
     supplierName,
     supplierContact,
+    receivingDate,
     harvestDate,
     coldStorageStartDate,
     coldStorageDays,
@@ -2368,6 +2413,7 @@ class ScionBatche extends DataClass implements Insertable<ScionBatche> {
           other.sourceType == this.sourceType &&
           other.supplierName == this.supplierName &&
           other.supplierContact == this.supplierContact &&
+          other.receivingDate == this.receivingDate &&
           other.harvestDate == this.harvestDate &&
           other.coldStorageStartDate == this.coldStorageStartDate &&
           other.coldStorageDays == this.coldStorageDays &&
@@ -2386,6 +2432,7 @@ class ScionBatchesCompanion extends UpdateCompanion<ScionBatche> {
   final Value<String> sourceType;
   final Value<String?> supplierName;
   final Value<String?> supplierContact;
+  final Value<DateTime?> receivingDate;
   final Value<DateTime?> harvestDate;
   final Value<DateTime?> coldStorageStartDate;
   final Value<int?> coldStorageDays;
@@ -2402,6 +2449,7 @@ class ScionBatchesCompanion extends UpdateCompanion<ScionBatche> {
     this.sourceType = const Value.absent(),
     this.supplierName = const Value.absent(),
     this.supplierContact = const Value.absent(),
+    this.receivingDate = const Value.absent(),
     this.harvestDate = const Value.absent(),
     this.coldStorageStartDate = const Value.absent(),
     this.coldStorageDays = const Value.absent(),
@@ -2419,6 +2467,7 @@ class ScionBatchesCompanion extends UpdateCompanion<ScionBatche> {
     this.sourceType = const Value.absent(),
     this.supplierName = const Value.absent(),
     this.supplierContact = const Value.absent(),
+    this.receivingDate = const Value.absent(),
     this.harvestDate = const Value.absent(),
     this.coldStorageStartDate = const Value.absent(),
     this.coldStorageDays = const Value.absent(),
@@ -2438,6 +2487,7 @@ class ScionBatchesCompanion extends UpdateCompanion<ScionBatche> {
     Expression<String>? sourceType,
     Expression<String>? supplierName,
     Expression<String>? supplierContact,
+    Expression<DateTime>? receivingDate,
     Expression<DateTime>? harvestDate,
     Expression<DateTime>? coldStorageStartDate,
     Expression<int>? coldStorageDays,
@@ -2455,6 +2505,7 @@ class ScionBatchesCompanion extends UpdateCompanion<ScionBatche> {
       if (sourceType != null) 'source_type': sourceType,
       if (supplierName != null) 'supplier_name': supplierName,
       if (supplierContact != null) 'supplier_contact': supplierContact,
+      if (receivingDate != null) 'receiving_date': receivingDate,
       if (harvestDate != null) 'harvest_date': harvestDate,
       if (coldStorageStartDate != null)
         'cold_storage_start_date': coldStorageStartDate,
@@ -2475,6 +2526,7 @@ class ScionBatchesCompanion extends UpdateCompanion<ScionBatche> {
     Value<String>? sourceType,
     Value<String?>? supplierName,
     Value<String?>? supplierContact,
+    Value<DateTime?>? receivingDate,
     Value<DateTime?>? harvestDate,
     Value<DateTime?>? coldStorageStartDate,
     Value<int?>? coldStorageDays,
@@ -2492,6 +2544,7 @@ class ScionBatchesCompanion extends UpdateCompanion<ScionBatche> {
       sourceType: sourceType ?? this.sourceType,
       supplierName: supplierName ?? this.supplierName,
       supplierContact: supplierContact ?? this.supplierContact,
+      receivingDate: receivingDate ?? this.receivingDate,
       harvestDate: harvestDate ?? this.harvestDate,
       coldStorageStartDate: coldStorageStartDate ?? this.coldStorageStartDate,
       coldStorageDays: coldStorageDays ?? this.coldStorageDays,
@@ -2528,6 +2581,9 @@ class ScionBatchesCompanion extends UpdateCompanion<ScionBatche> {
     }
     if (supplierContact.present) {
       map['supplier_contact'] = Variable<String>(supplierContact.value);
+    }
+    if (receivingDate.present) {
+      map['receiving_date'] = Variable<DateTime>(receivingDate.value);
     }
     if (harvestDate.present) {
       map['harvest_date'] = Variable<DateTime>(harvestDate.value);
@@ -2566,6 +2622,7 @@ class ScionBatchesCompanion extends UpdateCompanion<ScionBatche> {
           ..write('sourceType: $sourceType, ')
           ..write('supplierName: $supplierName, ')
           ..write('supplierContact: $supplierContact, ')
+          ..write('receivingDate: $receivingDate, ')
           ..write('harvestDate: $harvestDate, ')
           ..write('coldStorageStartDate: $coldStorageStartDate, ')
           ..write('coldStorageDays: $coldStorageDays, ')
@@ -5385,6 +5442,7 @@ typedef $$ScionBatchesTableCreateCompanionBuilder =
       Value<String> sourceType,
       Value<String?> supplierName,
       Value<String?> supplierContact,
+      Value<DateTime?> receivingDate,
       Value<DateTime?> harvestDate,
       Value<DateTime?> coldStorageStartDate,
       Value<int?> coldStorageDays,
@@ -5403,6 +5461,7 @@ typedef $$ScionBatchesTableUpdateCompanionBuilder =
       Value<String> sourceType,
       Value<String?> supplierName,
       Value<String?> supplierContact,
+      Value<DateTime?> receivingDate,
       Value<DateTime?> harvestDate,
       Value<DateTime?> coldStorageStartDate,
       Value<int?> coldStorageDays,
@@ -5477,6 +5536,11 @@ class $$ScionBatchesTableFilterComposer
 
   ColumnFilters<String> get supplierContact => $composableBuilder(
     column: $table.supplierContact,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get receivingDate => $composableBuilder(
+    column: $table.receivingDate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5583,6 +5647,11 @@ class $$ScionBatchesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get receivingDate => $composableBuilder(
+    column: $table.receivingDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get harvestDate => $composableBuilder(
     column: $table.harvestDate,
     builder: (column) => ColumnOrderings(column),
@@ -5680,6 +5749,11 @@ class $$ScionBatchesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<DateTime> get receivingDate => $composableBuilder(
+    column: $table.receivingDate,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get harvestDate => $composableBuilder(
     column: $table.harvestDate,
     builder: (column) => column,
@@ -5771,6 +5845,7 @@ class $$ScionBatchesTableTableManager
                 Value<String> sourceType = const Value.absent(),
                 Value<String?> supplierName = const Value.absent(),
                 Value<String?> supplierContact = const Value.absent(),
+                Value<DateTime?> receivingDate = const Value.absent(),
                 Value<DateTime?> harvestDate = const Value.absent(),
                 Value<DateTime?> coldStorageStartDate = const Value.absent(),
                 Value<int?> coldStorageDays = const Value.absent(),
@@ -5787,6 +5862,7 @@ class $$ScionBatchesTableTableManager
                 sourceType: sourceType,
                 supplierName: supplierName,
                 supplierContact: supplierContact,
+                receivingDate: receivingDate,
                 harvestDate: harvestDate,
                 coldStorageStartDate: coldStorageStartDate,
                 coldStorageDays: coldStorageDays,
@@ -5805,6 +5881,7 @@ class $$ScionBatchesTableTableManager
                 Value<String> sourceType = const Value.absent(),
                 Value<String?> supplierName = const Value.absent(),
                 Value<String?> supplierContact = const Value.absent(),
+                Value<DateTime?> receivingDate = const Value.absent(),
                 Value<DateTime?> harvestDate = const Value.absent(),
                 Value<DateTime?> coldStorageStartDate = const Value.absent(),
                 Value<int?> coldStorageDays = const Value.absent(),
@@ -5821,6 +5898,7 @@ class $$ScionBatchesTableTableManager
                 sourceType: sourceType,
                 supplierName: supplierName,
                 supplierContact: supplierContact,
+                receivingDate: receivingDate,
                 harvestDate: harvestDate,
                 coldStorageStartDate: coldStorageStartDate,
                 coldStorageDays: coldStorageDays,

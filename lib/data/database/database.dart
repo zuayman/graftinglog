@@ -70,9 +70,10 @@ class ScionBatches extends Table {
   TextColumn get supplierName => text().nullable()(); // 供應商名稱（農友名稱、花苞商名稱等）
   TextColumn get supplierContact => text().nullable()(); // 聯絡方式
 
-  // 自採專用欄位
-  DateTimeColumn get harvestDate => dateTime().nullable()(); // 採收日期
-  DateTimeColumn get coldStorageStartDate => dateTime().nullable()(); // 冷藏開始日期
+  // 日期資訊
+  DateTimeColumn get receivingDate => dateTime().nullable()(); // 入庫日期（花苞入倉日期）
+  DateTimeColumn get harvestDate => dateTime().nullable()(); // 採收日期（自採專用）
+  DateTimeColumn get coldStorageStartDate => dateTime().nullable()(); // 冷藏開始日期（自採專用）
   IntColumn get coldStorageDays => integer().nullable()(); // 冷藏天數
 
   // 品質與成本
@@ -121,7 +122,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -236,6 +237,16 @@ class AppDatabase extends _$AppDatabase {
         try {
           await customStatement(
             'ALTER TABLE projects ADD COLUMN budget_alert_threshold REAL NOT NULL DEFAULT 0.8',
+          );
+        } catch (e) {
+          // Column might already exist, ignore error
+        }
+      }
+      if (from < 10) {
+        // Migration from version 9 to 10: Add receiving_date to ScionBatches
+        try {
+          await customStatement(
+            'ALTER TABLE scion_batches ADD COLUMN receiving_date INTEGER',
           );
         } catch (e) {
           // Column might already exist, ignore error

@@ -170,6 +170,22 @@ class ScionBatchScreen extends ConsumerWidget {
                   ],
                 ),
               ],
+              if (batch.receivingDate != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.input, size: 16, color: Colors.blue[600]),
+                    const SizedBox(width: 4),
+                    Text('入庫: ${DateFormat('yyyy/MM/dd').format(batch.receivingDate!)}'),
+                    if (batch.coldStorageDays != null) ...[
+                      const SizedBox(width: 16),
+                      Icon(Icons.ac_unit, size: 16, color: Colors.cyan[600]),
+                      const SizedBox(width: 4),
+                      Text('冷藏: ${batch.coldStorageDays} 天'),
+                    ],
+                  ],
+                ),
+              ],
               if (batch.sourceType == '自採' && batch.harvestDate != null) ...[
                 const SizedBox(height: 8),
                 Row(
@@ -177,7 +193,7 @@ class ScionBatchScreen extends ConsumerWidget {
                     Icon(Icons.eco, size: 16, color: Colors.green[600]),
                     const SizedBox(width: 4),
                     Text('採收: ${DateFormat('yyyy/MM/dd').format(batch.harvestDate!)}'),
-                    if (batch.coldStorageDays != null) ...[
+                    if (batch.coldStorageDays != null && batch.receivingDate == null) ...[
                       const SizedBox(width: 16),
                       Icon(Icons.ac_unit, size: 16, color: Colors.blue[600]),
                       const SizedBox(width: 4),
@@ -259,6 +275,7 @@ class _ScionBatchFormScreenState extends ConsumerState<ScionBatchFormScreen> {
   late TextEditingController _notesController;
 
   DateTime _deliveryDate = DateTime.now();
+  DateTime? _receivingDate;
   String _sourceType = '其他';
   DateTime? _harvestDate;
   DateTime? _coldStorageStartDate;
@@ -283,6 +300,7 @@ class _ScionBatchFormScreenState extends ConsumerState<ScionBatchFormScreen> {
 
     if (batch != null) {
       _deliveryDate = batch.deliveryDate;
+      _receivingDate = batch.receivingDate;
       _sourceType = batch.sourceType;
       _harvestDate = batch.harvestDate;
       _coldStorageStartDate = batch.coldStorageStartDate;
@@ -381,6 +399,36 @@ class _ScionBatchFormScreenState extends ConsumerState<ScionBatchFormScreen> {
               onTap: () async {
                 final date = await showDatePicker(
                   context: context,
+                  initialDate: _receivingDate ?? DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2030),
+                );
+                if (date != null) {
+                  setState(() => _receivingDate = date);
+                }
+              },
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: '入庫日期',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.calendar_today),
+                  hintText: '花苞入倉日期',
+                ),
+                child: Text(
+                  _receivingDate != null
+                    ? DateFormat('yyyy/MM/dd').format(_receivingDate!)
+                    : '選擇入庫日期',
+                  style: TextStyle(
+                    color: _receivingDate != null ? null : Colors.grey[600],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
                   initialDate: _deliveryDate,
                   firstDate: DateTime(2020),
                   lastDate: DateTime(2030),
@@ -408,6 +456,30 @@ class _ScionBatchFormScreenState extends ConsumerState<ScionBatchFormScreen> {
               ),
               keyboardType: TextInputType.number,
             ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _coldStorageDaysController,
+              decoration: const InputDecoration(
+                labelText: '冷藏天數（可選）',
+                border: OutlineInputBorder(),
+                suffixText: '天',
+                hintText: '或自動計算',
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            if (_receivingDate != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                '💡 自動計算: ${_deliveryDate.difference(_receivingDate!).inDays} 天 (入庫→出庫)',
+                style: TextStyle(color: Colors.blue[700], fontSize: 12),
+              ),
+            ] else if (_sourceType == '自採' && _coldStorageStartDate != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                '💡 自動計算: ${_deliveryDate.difference(_coldStorageStartDate!).inDays} 天 (冷藏→出庫)',
+                style: TextStyle(color: Colors.blue[700], fontSize: 12),
+              ),
+            ],
           ],
         ),
       ),
@@ -539,24 +611,6 @@ class _ScionBatchFormScreenState extends ConsumerState<ScionBatchFormScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _coldStorageDaysController,
-              decoration: const InputDecoration(
-                labelText: '冷藏天數',
-                border: OutlineInputBorder(),
-                suffixText: '天',
-                hintText: '或系統自動計算',
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            if (_coldStorageStartDate != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                '自動計算: ${_deliveryDate.difference(_coldStorageStartDate!).inDays} 天',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-              ),
-            ],
           ],
         ),
       ),
@@ -668,14 +722,17 @@ class _ScionBatchFormScreenState extends ConsumerState<ScionBatchFormScreen> {
 
     final db = ref.read(databaseProvider);
 
-    // 計算冷藏天數（如果是自採且有設定日期）
+    // 計算冷藏天數
     int? coldStorageDays;
-    if (_sourceType == '自採' && _coldStorageStartDate != null) {
-      if (_coldStorageDaysController.text.isNotEmpty) {
-        coldStorageDays = int.tryParse(_coldStorageDaysController.text);
-      } else {
-        coldStorageDays = _deliveryDate.difference(_coldStorageStartDate!).inDays;
-      }
+    if (_coldStorageDaysController.text.isNotEmpty) {
+      // 優先使用手動輸入的天數
+      coldStorageDays = int.tryParse(_coldStorageDaysController.text);
+    } else if (_sourceType == '自採' && _coldStorageStartDate != null) {
+      // 自採：從冷藏開始日期到出庫日期
+      coldStorageDays = _deliveryDate.difference(_coldStorageStartDate!).inDays;
+    } else if (_receivingDate != null) {
+      // 其他來源：從入庫日期到出庫日期
+      coldStorageDays = _deliveryDate.difference(_receivingDate!).inDays;
     }
 
     try {
@@ -686,6 +743,7 @@ class _ScionBatchFormScreenState extends ConsumerState<ScionBatchFormScreen> {
           projectId: widget.projectId,
           batchName: _batchNameController.text,
           deliveryDate: _deliveryDate,
+          receivingDate: _receivingDate,
           quantity: _quantityController.text.isEmpty ? null : int.parse(_quantityController.text),
           sourceType: _sourceType,
           supplierName: _supplierNameController.text.isEmpty ? null : _supplierNameController.text,
@@ -706,6 +764,9 @@ class _ScionBatchFormScreenState extends ConsumerState<ScionBatchFormScreen> {
             projectId: drift.Value(widget.projectId),
             batchName: drift.Value(_batchNameController.text),
             deliveryDate: drift.Value(_deliveryDate),
+            receivingDate: _receivingDate == null
+              ? const drift.Value.absent()
+              : drift.Value(_receivingDate),
             quantity: _quantityController.text.isEmpty
               ? const drift.Value.absent()
               : drift.Value(int.parse(_quantityController.text)),
